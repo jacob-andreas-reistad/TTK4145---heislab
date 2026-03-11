@@ -1,16 +1,13 @@
 package distributor
 
 import (
-	"root/commonstate"
-	"root/elevator"
-	"root/elevator_doors"
-	"root/elevio"
-	"root/motor_directions"
+	"heis/elevator"
+	"heis/elevio"
 )
 
 func FSM(
 	id int,
-	cs *commonstate.commonstate,
+	cs *CommonState,
 
 	buttonCh <-chan elevio.ButtonEvent,
 	floorCh <-chan int,
@@ -43,7 +40,7 @@ func FSM(
 	}
 }
 
-func onButtonPress(btn elevio.ButtonEvent, id int, cs *commonstate.SharedState) {
+func onButtonPress(btn elevio.ButtonEvent, id int, cs *CommonState) {
 
 	// Register order
 	if btn.Button == elevio.BT_Cab {

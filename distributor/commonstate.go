@@ -6,10 +6,6 @@ import (
 	"heis/elevio"
 	"heis/network/peers"
 	"reflect"
-	"root/config"
-	"root/elevator"
-	"root/elevio"
-	"root/network/peers"
 	"strconv"
 )
 
