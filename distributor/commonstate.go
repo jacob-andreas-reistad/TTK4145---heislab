@@ -1,11 +1,11 @@
-package commonstate
+package distributor
 
 import (
+	"heis/config"
+	"heis/elevator"
+	"heis/elevio"
+	"heis/network/peers"
 	"reflect"
-	"root/config"
-	"root/elevator"
-	"root/elevio"
-	"root/network/peers"
 )
 
 type AckState int
@@ -22,8 +22,8 @@ type Elevator struct {
 }
 
 type CommonState struct {
-	Version int
-	Sender  int
+	OrderNum int
+	Sender   int
 
 	Acks [config.NumElevators]AckState
 
@@ -96,7 +96,7 @@ func (s *CommonState) InitializeSolo(id int) {
 
 func (s *CommonState) BeginUpdate(id int) {
 
-	s.Version++
+	s.OrderNum++
 	s.Sender = id
 
 	for i := range s.Acks {
