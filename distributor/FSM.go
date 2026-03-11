@@ -1,13 +1,8 @@
-// This file contains the FSM for the elevator system... tbc
-
 package distributor
 
 import (
-	"root/commonstate"
-	"root/elevator"
-	"root/elevator_doors"
-	"root/elevio"
-	"root/motor_directions"
+	"heis/elevator"
+	"heis/elevio"
 )
 
 func Run(

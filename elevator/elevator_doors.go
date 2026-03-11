@@ -1,4 +1,4 @@
-// This file contains the FSM for the elevator system... tbc
+// This file contains the logic for the elevator doors in the elevator system... tbc
 
 package elevator
 

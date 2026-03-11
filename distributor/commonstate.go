@@ -1,11 +1,11 @@
-package commonstate
+package distributor
 
 import (
+	"heis/config"
+	"heis/elevator"
+	"heis/elevio"
+	"heis/network/peers"
 	"reflect"
-	"root/config"
-	"root/elevator"
-	"root/elevio"
-	"root/network/peers"
 )
 
 type AckState int
