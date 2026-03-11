@@ -5,14 +5,72 @@ package elevator
 import (
 	"heis/config"
 	"heis/elevio"
+	"time"
 )
 
-type Orders [config.NumFloors][config.NumButtons]bool
+type DoorState int
 
-func (o Orders) has_order(dir MotorDirection, floor int) bool {
-	// Check if there is an order in the given direction at the given floor
-}
+const (
+	Obstructed DoorState = iota
+	Closed
+	Open
+)
 
-func order_done(dir MotorDirection, floor int, o Orders, orderDoneCh chan<- elevio.ButtonEvent){
-	// Send an order done event to the order handler
+func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh chan<- bool) {
+	elevio.SetDoorOpenLamp(false)
+
+	obstructionCh := make(chan bool)
+	go elevio.PollObstructionSwitch(obstructionCh)
+
+	door_state := Closed
+	obstruction := false
+	time_counter := time.NewTimer(time.Hour)
+	time_counter.Stop()
+
+	for {
+		select {
+
+		case <-doorOpenCh:
+			if obstruction {
+				obstructionCh <- true
+			}
+			switch door_state {
+			case Open:
+				time_counter = time.NewTimer(config.DoorOpenDuration)
+			case Closed:
+				elevio.SetDoorOpenLamp(true)
+				time_counter = time.NewTimer(config.DoorOpenDuration)
+				door_state = Open
+			case Obstructed:
+				time_counter = time.NewTimer(config.DoorOpenDuration)
+				door_state = Open
+			default:
+				panic("Invalid door state")
+			}
+
+		case obstruction = <-obstructionCh:
+			if door_state == Obstructed && !obstruction {
+				elevio.SetDoorOpenLamp(false)
+				doorClosedCh <- true
+				door_state = Closed
+			}
+			if obstruction {
+				doorObstructedCh <- true
+			} else {
+				doorObstructedCh <- false
+			}
+
+		case <-time_counter.C:
+			if door_state == Open {
+				panic("Door state undefined")
+			}
+			if obstruction {
+				door_state = Obstructed
+			} else {
+				elevio.SetDoorOpenLamp(false)
+				doorClosedCh <- true
+				door_state = Closed
+			}
+		}
+	}
 }
