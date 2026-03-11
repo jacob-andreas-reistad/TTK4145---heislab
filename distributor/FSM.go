@@ -1,13 +1,14 @@
 // This file contains the FSM for the elevator system... tbc
 
-package fsm
+package distributor
 
+/*
 import (
-	"root/commonstate"
-	"root/elevator"
-	"root/elevator_doors"
-	"root/elevio"
-	"root/motor_directions"
+	"commonstate"
+	"heis/elevator"
+	"heis/elevator/elevator_doors"
+	"heis/elevator/motor_directions"
+	"heis/elevio"
 )
 
 func Run(
@@ -154,3 +155,4 @@ func clearOrdersAtFloor(floor int, id int, cs *commonstate.SharedState) {
 	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
 	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
 }
+*/
