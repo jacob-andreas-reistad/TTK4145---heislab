@@ -79,7 +79,7 @@ func (s CommonState) SameState(other CommonState) bool {
 	return reflect.DeepEqual(s, other)
 }
 
-func (s *CommonState) HandlePeerUpdate(update peers.PeerUpdate, id int) {
+func (s *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
 
 	for _, lost := range update.Lost {
 		lostID, err := strconv.Atoi(lost)
