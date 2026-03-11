@@ -1,7 +1,6 @@
 package distributor
 
 import (
-	"heis/elevator"
 	"heis/elevio"
 )
 
@@ -17,134 +16,162 @@ func FSM(
 ) {
 
 	// Startup: ensure we reach a known floor
-	elevio.SetMotorDirection(elevio.MD_Down)
+	//elevio.SetMotorDirection(elevio.MD_Down)
 
+	//BIG ASS SWITCH CASE GOES HERE:
 	for {
 		select {
+		//case heisen går offline
+		// unavailable = true
 
-		case btn := <-buttonCh:
-			onButtonPress(btn, id, cs)
+		//case heisen er ikke idle (se eksempel i EirikIsAChamp)
+		//idle = false
 
-		case floor := <-floorCh:
-			onFloorArrival(floor, id, cs)
+		//case <-heartBeat.C
+		//networkTx -> cs
 
-		case <-doorTimeoutCh:
-			onDoorTimeout(id, cs)
+		//default (heisen er idle:)
+		//switch
+		//case idle:
+		//select
+		//case1, case2 osv.
 
-		case stop := <-stopCh:
-			onStopButton(stop)
+		//case !idle:
+		//select
+		//case1,case2,case3 osv.
 
-		case obstruction := <-obstructionCh:
-			onObstruction(obstruction)
+		//case offline:
+		// select
+		//case2,case2,case3 osv.
 		}
 	}
-}
 
-func onButtonPress(btn elevio.ButtonEvent, id int, cs *CommonState) {
+	// for {
+	// 	select {
 
-	// Register order
-	if btn.Button == elevio.BT_Cab {
-		cs.AddCabCall(btn.Floor, id)
-	} else {
-		cs.RegisterOrder(btn, id)
-	}
+	// 	case btn := <-buttonCh:
+	// 		onButtonPress(btn, id, cs)
 
-	// SKRU PÅ LYS HER
+	// 	case floor := <-floorCh:
+	// 		onFloorArrival(floor, id, cs)
 
-	local := cs.Elevators[id]
+	// 	case <-doorTimeoutCh:
+	// 		onDoorTimeout(id, cs)
 
-	if local.Current == elevator.Idle {
+	// 	case stop := <-stopCh:
+	// 		onStopButton(stop)
 
-		dir := motor_directions.ChooseDirection(local, cs)
+	// 	case obstruction := <-obstructionCh:
+	// 		onObstruction(obstruction)
+	// 	}
+	// }
 
-		if dir != elevio.MD_Stop {
-			elevio.SetMotorDirection(dir)
-			cs.SetElevatorState(id, elevator.Moving)
-		}
-	}
-}
+	// func onButtonPress(btn elevio.ButtonEvent, id int, cs *CommonState) {
 
-func onFloorArrival(floor int, id int, cs *commonstate.SharedState) {
+	// 	// Register order
+	// 	if btn.Button == elevio.BT_Cab {
+	// 		cs.AddCabCall(btn.Floor, id)
+	// 	} else {
+	// 		cs.RegisterOrder(btn, id)
+	// 	}
 
-	elevio.SetFloorIndicator(floor)
+	// 	// SKRU PÅ LYS HER
 
-	local := cs.Elevators[id]
+	// 	local := cs.Elevators[id]
 
-	// Update floor inside elevator state
-	local.Current.Floor = floor
-	cs.Elevators[id] = local
+	// 	if local.Current == elevator.Idle {
 
-	if motor_directions.ShouldStop(floor, local, cs) {
+	// 		dir := motor_directions.ChooseDirection(local, cs)
 
-		elevio.SetMotorDirection(elevio.MD_Stop)
+	// 		if dir != elevio.MD_Stop {
+	// 			elevio.SetMotorDirection(dir)
+	// 			cs.SetElevatorState(id, elevator.Moving)
+	// 		}
+	// 	}
+	// }
 
-		elevator_doors.OpenDoor()
+	// func onFloorArrival(floor int, id int, cs *commonstate.SharedState) {
 
-		cs.SetElevatorState(id, elevator.DoorOpen)
+	// 	elevio.SetFloorIndicator(floor)
 
-		clearOrdersAtFloor(floor, id, cs)
+	// 	local := cs.Elevators[id]
 
-	} else {
+	// 	// Update floor inside elevator state
+	// 	local.Current.Floor = floor
+	// 	cs.Elevators[id] = local
 
-		dir := motor_directions.ChooseDirection(local, cs)
-		elevio.SetMotorDirection(dir)
+	// 	if motor_directions.ShouldStop(floor, local, cs) {
 
-		cs.SetElevatorState(id, elevator.Moving)
-	}
-}
+	// 		elevio.SetMotorDirection(elevio.MD_Stop)
 
-func onDoorTimeout(id int, cs *commonstate.SharedState) {
+	// 		elevator_doors.OpenDoor()
 
-	elevator_doors.CloseDoor()
+	// 		cs.SetElevatorState(id, elevator.DoorOpen)
 
-	local := cs.Elevators[id]
+	// 		clearOrdersAtFloor(floor, id, cs)
 
-	dir := motor_directions.ChooseDirection(local, cs)
+	// 	} else {
 
-	if dir == elevio.MD_Stop {
+	// 		dir := motor_directions.ChooseDirection(local, cs)
+	// 		elevio.SetMotorDirection(dir)
 
-		cs.SetElevatorState(id, elevator.Idle)
+	// 		cs.SetElevatorState(id, elevator.Moving)
+	// 	}
+	// }
 
-	} else {
+	// func onDoorTimeout(id int, cs *commonstate.SharedState) {
 
-		elevio.SetMotorDirection(dir)
-		cs.SetElevatorState(id, elevator.Moving)
-	}
-}
+	// 	elevator_doors.CloseDoor()
 
-func onStopButton(stop bool) {
+	// 	local := cs.Elevators[id]
 
-	if stop {
+	// 	dir := motor_directions.ChooseDirection(local, cs)
 
-		elevio.SetMotorDirection(elevio.MD_Stop)
-		elevio.SetStopLamp(true)
+	// 	if dir == elevio.MD_Stop {
 
-	} else {
+	// 		cs.SetElevatorState(id, elevator.Idle)
 
-		elevio.SetStopLamp(false)
+	// 	} else {
 
-	}
-}
+	// 		elevio.SetMotorDirection(dir)
+	// 		cs.SetElevatorState(id, elevator.Moving)
+	// 	}
+	// }
 
-func onObstruction(obstruction bool) {
+	// func onStopButton(stop bool) {
 
-	if obstruction {
+	// 	if stop {
 
-		elevator_doors.KeepDoorOpen()
+	// 		elevio.SetMotorDirection(elevio.MD_Stop)
+	// 		elevio.SetStopLamp(true)
 
-	}
-}
+	// 	} else {
 
-func clearOrdersAtFloor(floor int, id int, cs *commonstate.SharedState) {
+	// 		elevio.SetStopLamp(false)
 
-	// Clear cab call
-	cs.RemoveCabCall(floor, id)
-	elevio.SetButtonLamp(elevio.BT_Cab, floor, false)
+	// 	}
+	// }
 
-	// Clear hall calls
-	cs.RemoveHallCall(floor, elevio.BT_HallUp)
-	cs.RemoveHallCall(floor, elevio.BT_HallDown)
+	// func onObstruction(obstruction bool) {
 
-	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
-	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
+	// 	if obstruction {
+
+	// 		elevator_doors.KeepDoorOpen()
+
+	// 	}
+	// }
+
+	// func clearOrdersAtFloor(floor int, id int, cs *commonstate.SharedState) {
+
+	// 	// Clear cab call
+	// 	cs.RemoveCabCall(floor, id)
+	// 	elevio.SetButtonLamp(elevio.BT_Cab, floor, false)
+
+	// 	// Clear hall calls
+	// 	cs.RemoveHallCall(floor, elevio.BT_HallUp)
+	// 	cs.RemoveHallCall(floor, elevio.BT_HallDown)
+
+	// 	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
+	// 	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
+	// }
 }
