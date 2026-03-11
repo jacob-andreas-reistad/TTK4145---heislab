@@ -6,6 +6,11 @@ import (
 	"heis/elevio"
 	"heis/network/peers"
 	"reflect"
+	"root/config"
+	"root/elevator"
+	"root/elevio"
+	"root/network/peers"
+	"strconv"
 )
 
 type AckState int
@@ -22,8 +27,8 @@ type Elevator struct {
 }
 
 type CommonState struct {
-	Version int
-	Sender  int
+	StateNum int
+	Sender   int
 
 	Acks [config.NumElevators]AckState
 
@@ -81,8 +86,13 @@ func (s CommonState) SameState(other CommonState) bool {
 func (s *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
 
 	for _, lost := range update.Lost {
-		s.Acks[lost] = Offline
+		lostID, err := strconv.Atoi(lost)
+		if err != nil {
+			continue
+		}
+		s.Acks[lostID] = Offline
 	}
+
 }
 
 func (s *CommonState) InitializeSolo(id int) {
@@ -96,7 +106,7 @@ func (s *CommonState) InitializeSolo(id int) {
 
 func (s *CommonState) BeginUpdate(id int) {
 
-	s.Version++
+	s.StateNum++
 	s.Sender = id
 
 	for i := range s.Acks {
