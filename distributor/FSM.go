@@ -2,18 +2,17 @@
 
 package distributor
 
-/*
 import (
 	"commonstate"
 	"heis/elevator"
-	"heis/elevator/elevator_doors"
+	"heis/elevator/elevator_doors.go"
 	"heis/elevator/motor_directions"
 	"heis/elevio"
 )
 
-func Run(
+func FSM(
 	id int,
-	cs *commonstate.SharedState,
+	cs *commonstate.commonstate,
 
 	buttonCh <-chan elevio.ButtonEvent,
 	floorCh <-chan int,
@@ -52,11 +51,10 @@ func onButtonPress(btn elevio.ButtonEvent, id int, cs *commonstate.SharedState) 
 	if btn.Button == elevio.BT_Cab {
 		cs.AddCabCall(btn.Floor, id)
 	} else {
-		cs.AddHallCall(btn.Floor, btn.Button)
+		cs.RegisterOrder(btn, id)
 	}
 
-	// Turn on button lamp
-	elevio.SetButtonLamp(btn.Button, btn.Floor, true)
+	// SKRU PÅ LYS HER
 
 	local := cs.Elevators[id]
 
@@ -155,4 +153,3 @@ func clearOrdersAtFloor(floor int, id int, cs *commonstate.SharedState) {
 	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
 	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
 }
-*/
