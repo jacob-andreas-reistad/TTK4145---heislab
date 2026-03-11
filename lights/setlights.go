@@ -1,9 +1,12 @@
 package setlights
 
-import "heis/elevio"
-import "heis/config"
-import "heis/distributor"
+import (
+	"heis/config"
+	"heis/distributor"
+	"heis/elevio"
+)
 
+//Balle 123 test
 
 func SetPanelLights(CommonState distributor.CommonState, ElevatorNumber int) {
 	for floor := 0; floor < config.NumFloors; floor++ {
