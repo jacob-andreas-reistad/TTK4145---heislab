@@ -14,7 +14,7 @@ type AckState int
 const (
 	Pending AckState = iota
 	Confirmed
-	Offline
+	Disconnected
 )
 
 type Elevator struct {
@@ -33,37 +33,37 @@ type CommonState struct {
 	Elevators [config.NumElevators]Elevator
 }
 
-func (s *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
+func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
-		s.Elevators[id].CabCalls[btn.Floor] = true
+		cs.Elevators[id].CabCalls[btn.Floor] = true
 	default:
-		s.HallCalls[btn.Floor][btn.Button] = true
+		cs.HallCalls[btn.Floor][btn.Button] = true
 	}
 }
 
-func (s *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
+func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
-		s.Elevators[id].CabCalls[btn.Floor] = false
+		cs.Elevators[id].CabCalls[btn.Floor] = false
 	default:
-		s.HallCalls[btn.Floor][btn.Button] = false
+		cs.HallCalls[btn.Floor][btn.Button] = false
 	}
 }
 
-func (s *CommonState) SetElevatorState(id int, state elevator.State) {
-	info := s.Elevators[id]
+func (cs *CommonState) SetElevatorState(id int, state elevator.State) {
+	info := cs.Elevators[id]
 	info.Current = state
-	s.Elevators[id] = info
+	cs.Elevators[id] = info
 }
 
-func (s *CommonState) AllAcknowledged(self int) bool {
+func (cs *CommonState) AllAcknowledged(self int) bool {
 
-	if s.Acks[self] == Offline {
+	if cs.Acks[self] == Disconnected {
 		return false
 	}
 
-	for _, ack := range s.Acks {
+	for _, ack := range cs.Acks {
 		if ack == Pending {
 			return false
 		}
@@ -71,43 +71,43 @@ func (s *CommonState) AllAcknowledged(self int) bool {
 	return true
 }
 
-func (s CommonState) SameState(other CommonState) bool {
+func (cs CommonState) SameState(other CommonState) bool {
 
-	s.Acks = [config.NumElevators]AckState{}
+	cs.Acks = [config.NumElevators]AckState{}
 	other.Acks = [config.NumElevators]AckState{}
 
-	return reflect.DeepEqual(s, other)
+	return reflect.DeepEqual(cs, other)
 }
 
-func (s *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
+func (cs *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
 
 	for _, lost := range update.Lost {
 		lostID, err := strconv.Atoi(lost)
 		if err != nil {
 			continue
 		}
-		s.Acks[lostID] = Offline
+		cs.Acks[lostID] = Disconnected
 	}
 
 }
 
-func (s *CommonState) InitializeSolo(id int) {
+func (cs *CommonState) makeOtherElevsUnavailable(id int) {
 
-	for i := range s.Acks {
-		if i != id {
-			s.Acks[i] = Offline
+	for elevator := range cs.Acks {
+		if elevator != id {
+			cs.Acks[elevator] = Disconnected
 		}
 	}
 }
 
-func (s *CommonState) BeginUpdate(id int) {
+func (cs *CommonState) BeginUpdate(id int) {
 
-	s.StateNum++
-	s.Sender = id
+	cs.StateNum++
+	cs.Sender = id
 
-	for i := range s.Acks {
-		if s.Acks[i] == Confirmed {
-			s.Acks[i] = Pending
+	for i := range cs.Acks {
+		if cs.Acks[i] == Confirmed {
+			cs.Acks[i] = Pending
 		}
 	}
 }
