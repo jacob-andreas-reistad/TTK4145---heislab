@@ -53,58 +53,45 @@ func Synchronizer(
 		//case heisen går offline
 		// disconnected = true
 		case <-disconnectTimer.C:
-			cs.makeOtherElevsUnavailable(ElevID)
+			cs.MakeOtherElevatorsUnavailable(ElevID)
 			fmt.Println("Lost connction")
 			disconnected = true
 
 		//case heisen er ikke idle (se eksempel i EirikIsAChamp)
 		//idle = false
-		case peers = <- peersCh:
-			cs.makeOtherElevsUnavailable(ElevID)
+		case peers = <-peersCh:
+			cs.MakeOtherElevatorsUnavailable(ElevID)
 			idle = false
-
 
 		case <-heartbeat.C:
 			networkTx <- cs
 
-
 		default:
 		}
 
-
-
 		switch {
 		case idle:
-		
-
 
 		case disconnected:
 
-		
-
-
-
 		case !idle:
-
-
-
 
 		}
 
-			//default (heisen er idle:)
-			//switch
-			//case idle:
-			//select
-			//case1, case2 osv.
+		//default (heisen er idle:)
+		//switch
+		//case idle:
+		//select
+		//case1, case2 osv.
 
-			//case !idle:
-			//select
-			//case1,case2,case3 osv.
+		//case !idle:
+		//select
+		//case1,case2,case3 osv.
 
-			//case offline:
-			// select
-			//case2,case2,case3 osv.
-		
+		//case offline:
+		// select
+		//case2,case2,case3 osv.
+
 	}
 }
 

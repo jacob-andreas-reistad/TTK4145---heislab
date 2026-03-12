@@ -33,6 +33,7 @@ type CommonState struct {
 	Elevators [config.NumElevators]Elevator
 }
 
+//Bør evt splittes i to, en hallcall og en cabcall
 func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
