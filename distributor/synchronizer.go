@@ -4,7 +4,16 @@ import (
 	"heis/elevio"
 )
 
-func FSM(
+type PendingType int
+
+const (
+	None PendingType = iota
+	AddOrder
+	RemoveOrder
+	UpdateState
+)
+
+func Synchronizer(
 	id int,
 	cs *CommonState,
 
