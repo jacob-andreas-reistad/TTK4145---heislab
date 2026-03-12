@@ -7,8 +7,12 @@ import "fmt"
 
 import (
 	"fmt"
+	"heis/config"
 	"heis/distributor"
+	"heis/elevator"
 	"heis/elevio"
+	"heis/lights"
+	"heis/network"
 )
 
 func main() {
