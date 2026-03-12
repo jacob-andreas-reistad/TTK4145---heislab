@@ -47,7 +47,7 @@ func (md MotorDirection) opposite() MotorDirection {
 	}
 }
 
-func (md MotorDirection) to_string() string {
+func (md MotorDirection) ToString() string {
 	switch md {
 	case Up:
 		return "Up"
