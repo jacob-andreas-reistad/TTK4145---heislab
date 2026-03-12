@@ -1,6 +1,7 @@
 package distributor
 
 import (
+	"fmt"
 	"heis/config"
 	"heis/elevator"
 	"heis/elevio"
@@ -50,15 +51,45 @@ func Synchronizer(
 	for {
 		select {
 		//case heisen går offline
-		// unavailable = true
+		// disconnected = true
 		case <-disconnectTimer.C:
 			cs.makeOtherElevsUnavailable(ElevID)
+			fmt.Println("Lost connction")
+			disconnected = true
 
-			//case heisen er ikke idle (se eksempel i EirikIsAChamp)
-			//idle = false
+		//case heisen er ikke idle (se eksempel i EirikIsAChamp)
+		//idle = false
+		case peers = <- peersCh:
+			cs.makeOtherElevsUnavailable(ElevID)
+			idle = false
 
-			//case <-heartBeat.C
-			//networkTx -> cs
+
+		case <-heartbeat.C:
+			networkTx <- cs
+
+
+		default:
+		}
+
+
+
+		switch {
+		case idle:
+		
+
+
+		case disconnected:
+
+		
+
+
+
+		case !idle:
+
+
+
+
+		}
 
 			//default (heisen er idle:)
 			//switch
@@ -73,7 +104,7 @@ func Synchronizer(
 			//case offline:
 			// select
 			//case2,case2,case3 osv.
-		}
+		
 	}
 }
 
