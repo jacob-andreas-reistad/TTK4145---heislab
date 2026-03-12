@@ -51,7 +51,7 @@ func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
 	}
 }
 
-func (cs *CommonState) SetElevatorState(id int, state elevator.State) {
+func (cs *CommonState) UpdateElevatorState(id int, state elevator.State) {
 	info := cs.Elevators[id]
 	info.Current = state
 	cs.Elevators[id] = info
@@ -71,17 +71,17 @@ func (cs *CommonState) AllAcknowledged(self int) bool {
 	return true
 }
 
-func (cs CommonState) SameState(other CommonState) bool {
+func (cs CommonState) CheckSameState(newCs CommonState) bool {
 
 	cs.Acks = [config.NumElevators]AckState{}
-	other.Acks = [config.NumElevators]AckState{}
+	newCs.Acks = [config.NumElevators]AckState{}
 
-	return reflect.DeepEqual(cs, other)
+	return reflect.DeepEqual(cs, newCs)
 }
 
-func (cs *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
+func (cs *CommonState) MakeLostElevatorsUnavailable(peerList peers.PeerUpdate) {
 
-	for _, lost := range update.Lost {
+	for _, lost := range peerList.Lost {
 		lostID, err := strconv.Atoi(lost)
 		if err != nil {
 			continue
@@ -91,7 +91,7 @@ func (cs *CommonState) HandlePeerUpdate(update peers.PeerUpdate) {
 
 }
 
-func (cs *CommonState) makeOtherElevsUnavailable(id int) {
+func (cs *CommonState) MakeOtherElevatorsUnavailable(id int) {
 
 	for elevator := range cs.Acks {
 		if elevator != id {
@@ -100,7 +100,7 @@ func (cs *CommonState) makeOtherElevsUnavailable(id int) {
 	}
 }
 
-func (cs *CommonState) BeginUpdate(id int) {
+func (cs *CommonState) PrepNewCommonState(id int) {
 
 	cs.StateNum++
 	cs.Sender = id
