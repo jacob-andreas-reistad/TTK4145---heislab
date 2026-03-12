@@ -71,7 +71,39 @@ func Synchronizer(
 
 		switch {
 		case idle:
+			select {
+			case newButtonEvent = <-buttonEventCh: //new button press
+				tempStorage = AddOrder
+				cs.PrepNewCommonState(ElevID)
+				cs.RegisterOrder(newButtonEvent, ElevID)
+				cs.Acks[ElevID] = Confirmed
+				idle = false
 
+			case completedOrder = <-completedOrderCh: //order completed
+				tempStorage = RemoveOrder
+				cs.PrepNewCommonState(ElevID)
+				cs.ClearOrder(completedOrder, ElevID)
+				cs.Acks[ElevID] = Confirmed
+				idle = false
+
+			case newLocalState = <-localStateCh: //local state changes
+				tempStorage = UpdateState
+				cs.PrepNewCommonState(ElevID)
+				cs.UpdateElevatorState(ElevID, newLocalState)
+				cs.Acks[ElevID] = Confirmed
+				idle = false
+
+
+			case arrivedCs := <-networkRx: //new common state arrived while idle
+				disconnectTimer = time.NewTimer(config.DisconnectTime)
+				if arrivedCs.StateNum > cs.StateNum || (arrivedCs.Sender > cs.Sender && arrivedCs.StateNum == cs.StateNum) {
+					cs = arrivedCs
+					cs.MakeLostElevatorsUnavailable(peers)
+					cs.Acks[ElevID] = Confirmed
+					idle = false
+				}
+			default:
+			}
 		case disconnected:
 			select {
 
