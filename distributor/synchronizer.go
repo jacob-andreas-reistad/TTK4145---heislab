@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-type TempStorageType int
+type PendingType int
 
 const (
-	None TempStorageType = iota
+	None PendingType = iota
 	AddOrder
 	RemoveOrder
 	UpdateState
@@ -36,7 +36,7 @@ func Synchronizer(
 	var newLocalState elevator.State
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
-	var tempStorage TempStorageType
+	var pending PendingType
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
@@ -71,42 +71,40 @@ func Synchronizer(
 
 		switch {
 		case idle:
+
+		case disconnected:
 			select {
-			case newButtonEvent = <-buttonEventCh: //new button press
-				tempStorage = AddOrder
-				cs.PrepNewCommonState(ElevID)
-				cs.RegisterOrder(newButtonEvent, ElevID)
-				cs.Acks[ElevID] = Confirmed
-				idle = false
 
-			case completedOrder = <-completedOrderCh: //order completed
-				tempStorage = RemoveOrder
-				cs.PrepNewCommonState(ElevID)
-				cs.ClearOrder(completedOrder, ElevID)
-				cs.Acks[ElevID] = Confirmed
-				idle = false
-
-			case newLocalState = <-localStateCh: //local state changes
-				tempStorage = UpdateState
-				cs.PrepNewCommonState(ElevID)
-				cs.UpdateElevatorState(ElevID, newLocalState)
-				cs.Acks[ElevID] = Confirmed
-				idle = false
-
-
-			case arrivedCs := <-networkRx: //new common state arrived while idle
-				disconnectTimer = time.NewTimer(config.DisconnectTime)
-				if arrivedCs.StateNum > cs.StateNum || (arrivedCs.Sender > cs.Sender && arrivedCs.StateNum == cs.StateNum) {
-					cs = arrivedCs
-					cs.MakeLostElevatorsUnavailable(peers)
+			case newButtonEvent := <-buttonEventCh:
+				if !cs.Elevators[ElevID].Current.MotorStop {
 					cs.Acks[ElevID] = Confirmed
-					idle = false
+					cs.RegisterOrder(newButtonEvent, ElevID)
+					ackedCsCh <- cs
+				}
+
+			case completedOrder := <-completedOrderCh:
+				cs.Acks[ElevID] = Confirmed
+				cs.ClearOrder(completedOrder, ElevID)
+				ackedCsCh <- cs
+
+			case newLocalState := <-localStateCh:
+				if !(newLocalState.Obstructed || newLocalState.MotorStop) {
+					cs.Acks[ElevID] = Confirmed
+					cs.UpdateElevatorState(ElevID, newLocalState)
+					ackedCsCh <- cs
+				}
+
+			case <-networkRx:
+				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
+					fmt.Println("Connection restored to network.")
+					disconnected = false
+				} else {
+					cs.Acks[ElevID] = Disconnected
+					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
 				}
 
 			default:
 			}
-
-		case disconnected:
 
 		case !idle:
 
