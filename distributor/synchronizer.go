@@ -1,7 +1,11 @@
 package distributor
 
 import (
+	"heis/config"
+	"heis/elevator"
 	"heis/elevio"
+	"heis/network/peers"
+	"time"
 )
 
 type PendingType int
@@ -14,15 +18,30 @@ const (
 )
 
 func Synchronizer(
-	id int,
-	cs *CommonState,
-
-	buttonCh <-chan elevio.ButtonEvent,
-	floorCh <-chan int,
-	doorTimeoutCh <-chan bool,
-	stopCh <-chan bool,
-	obstructionCh <-chan bool,
+	ElevID int,
+	localStateCh <-chan elevator.State,
+	peersCh <-chan peers.PeerUpdate,
+	networkTx chan<- CommonState,
+	networkRx <-chan CommonState,
+	ackedCsCh chan<- CommonState,
+	completedOrderCh <-chan elevio.ButtonEvent,
 ) {
+
+	buttonEventCh := make(chan elevio.ButtonEvent, config.Buffer)
+	go elevio.PollButtons(buttonEventCh)
+
+	var cs CommonState
+	var peers peers.PeerUpdate
+	var newLocalState elevator.State
+	var completedOrder elevio.ButtonEvent
+	var newButtonEvent elevio.ButtonEvent
+	var pending PendingType
+
+	heartbeat := time.NewTicker(config.HeartbeatTime)
+	disconnectTimer := time.NewTimer(config.DisconnectTime)
+
+	idle := true
+	disconnected := false
 
 	// Startup: ensure we reach a known floor
 	//elevio.SetMotorDirection(elevio.MD_Down)
