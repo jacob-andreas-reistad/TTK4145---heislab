@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-type PendingType int
+type TempStorageType int
 
 const (
-	None PendingType = iota
+	None TempStorageType = iota
 	AddOrder
 	RemoveOrder
 	UpdateState
@@ -36,7 +36,7 @@ func Synchronizer(
 	var newLocalState elevator.State
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
-	var pending PendingType
+	var tempStorage TempStorageType
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
@@ -93,7 +93,6 @@ func Synchronizer(
 				cs.Acks[ElevID] = Confirmed
 				idle = false
 
-
 			case arrivedCs := <-networkRx: //new common state arrived while idle
 				disconnectTimer = time.NewTimer(config.DisconnectTime)
 				if arrivedCs.StateNum > cs.StateNum || (arrivedCs.Sender > cs.Sender && arrivedCs.StateNum == cs.StateNum) {
@@ -141,7 +140,7 @@ func Synchronizer(
 		case !idle:
 
 		}
-
+		_ = tempStorage
 		//default (heisen er idle:)
 		//switch
 		//case idle:
