@@ -103,6 +103,60 @@ func Synchronizer(
 				}
 			default:
 			}
+		case !idle:
+			select {
+			case arrivedCs := <-networkRx: //new common state arrived while not idle
+				if arrivedCs.StateNum < cs.StateNum {
+					break
+				}
+
+				disconnectTimer = time.NewTimer(config.DisconnectTime)
+
+				switch {
+				case arrivedCs.StateNum > cs.StateNum || (arrivedCs.Sender > cs.Sender && arrivedCs.StateNum == cs.StateNum):
+					cs = arrivedCs
+					cs.Acks[ElevID] = Confirmed
+					cs.MakeLostElevatorsUnavailable(peers)
+
+				case arrivedCs.AllAcknowledged(ElevID):
+					cs = arrivedCs
+					ackedCsCh <- cs
+
+					switch {
+					case cs.Sender != ElevID && tempStorage != None:
+						cs.PrepNewCommonState(ElevID)
+
+						switch tempStorage {
+						case AddOrder:
+							cs.RegisterOrder(newButtonEvent, ElevID)
+							cs.Acks[ElevID] = Confirmed
+
+						case RemoveOrder:
+							cs.ClearOrder(completedOrder, ElevID)
+							cs.Acks[ElevID] = Confirmed
+
+						case UpdateState:
+							cs.UpdateElevatorState(ElevID, newLocalState)
+							cs.Acks[ElevID] = Confirmed
+						}
+					case cs.Sender == ElevID && tempStorage != None:
+						tempStorage = None
+						idle = true
+
+					default:
+						idle = true
+					}
+
+				case cs.CheckSameState(arrivedCs):
+					cs = arrivedCs
+					cs.Acks[ElevID] = Confirmed
+					cs.MakeLostElevatorsUnavailable(peers)
+
+				default:
+				}
+			default:
+			}
+
 		case disconnected:
 			select {
 
@@ -136,8 +190,6 @@ func Synchronizer(
 
 			default:
 			}
-
-		case !idle:
 
 		}
 		_ = tempStorage
