@@ -6,8 +6,6 @@ import (
 	"heis/elevio"
 )
 
-//Balle 123 test
-
 func SetPanelLights(CommonState distributor.CommonState, ElevatorNumber int) {
 	for floor := 0; floor < config.NumFloors; floor++ {
 		for buttonType := 0; buttonType < 2; buttonType++ {
@@ -18,7 +16,7 @@ func SetPanelLights(CommonState distributor.CommonState, ElevatorNumber int) {
 			}
 		}
 	}
-	
+
 	for floor := 0; floor < config.NumFloors; floor++ {
 		if CommonState.Elevators[ElevatorNumber].CabCalls[floor] {
 			elevio.SetButtonLamp(elevio.BT_Cab, floor, true)

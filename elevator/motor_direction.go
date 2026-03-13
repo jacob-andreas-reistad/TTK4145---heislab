@@ -8,11 +8,10 @@ type MotorDirection int
 
 const (
 	Stop MotorDirection = 0
-	Up                  = 1
-	Down                = -1
+	Up   MotorDirection = 1
+	Down MotorDirection = -1
 )
 
-//
 
 func (md MotorDirection) motor_direction() elevio.MotorDirection {
 	switch md {
