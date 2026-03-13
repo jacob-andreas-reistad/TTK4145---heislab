@@ -3,18 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"heis/assigner"
 	"heis/config"
 	"heis/distributor"
 	"heis/elevator"
 	"heis/elevio"
 	"heis/lights"
-	"heis/network"
+	"heis/network/bcast"
+	"heis/network/peers"
+	"strconv"
 )
 
 var id int
 var Port int
 
 func main() {
+
+	// Command line arguments for elevator ID and port number
 	elevID := flag.Int("id", 0, "<-- Default value, override with command line argument -id=x")
 	port := flag.Int("port", 15657, "<-- Default value, override with command line argument -port=xxxx")
 	flag.Parse()
@@ -27,6 +32,7 @@ func main() {
 	fmt.Println("Initialized Elevator id: ", id, " on port: ", Port)
 	fmt.Println("This system has ", config.NumFloors, " floors,", config.NumElevators, " elevators and ", config.NumButtons, " buttons per floor.")
 
+	// Channels for communication between goroutines
 	newOrderCh := make(chan elevator.Order, config.Buffer)
 	orderDoneCh := make(chan elevio.ButtonEvent, config.Buffer)
 	stateUpdateCh := make(chan elevator.State, config.Buffer)
@@ -36,6 +42,7 @@ func main() {
 	peersTx := make(chan bool, config.Buffer)
 	peersRx := make(chan peers.PeerUpdate, config.Buffer)
 
+	// Start goroutines for network communication and elevator control
 	go peers.Receiver(config.PeersPortNumber, peersRx)
 	go peers.Transmitter(config.PeersPortNumber, strconv.Itoa(id), peersTx)
 
@@ -46,8 +53,12 @@ func main() {
 	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh)
 
 	for {
-		cs := <-CsConfirmedCh
-		newOrderCh <- assigner.CostFunction(cs, id)
-		lights.SetPanelLights(cs, id)
+		select {
+		case cs := <-CsConfirmedCh:
+			newOrderCh <- assigner.CostFunction(cs, id)
+			lights.SetPanelLights(cs, id)
+		default:
+			continue
+		}
 	}
 }
