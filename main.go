@@ -1,49 +1,69 @@
 package main
 
-/*
-import "heis/elevio"
-import "fmt"
-*/
-
 import (
+	"flag"
 	"fmt"
+	"heis/assigner"
+	"heis/config"
 	"heis/distributor"
+	"heis/elevator"
 	"heis/elevio"
+	"heis/lights"
+	"heis/network/bcast"
+	"heis/network/peers"
+	"strconv"
 )
 
+var id int
+var Port int
+
 func main() {
+	
+	elevID := flag.Int("id", 0, "<-- Default value, override with command line argument -id=x")
+	port   := flag.Int("port", 15657, "<-- Default value, override with command line argument -port=xxxx")
+	flag.Parse()
 
-	numFloors := 4
-	s := distributor.CommonState{}
+	id = *elevID
+	Port = *port
 
-	// Test RegisterOrder - cab call
-	s.RegisterOrder(elevio.ButtonEvent{Floor: 2, Button: elevio.BT_Cab}, 0)
-	fmt.Println("CabCall floor 2 elevator 0:", s.Elevators[0].CabCalls[2]) // true
+	elevio.Init("localhost:"+strconv.Itoa(Port), config.NumFloors)
 
-	// Test RegisterOrder - hall call up
-	s.RegisterOrder(elevio.ButtonEvent{Floor: 1, Button: elevio.BT_HallUp}, 0)
-	fmt.Println("HallCall floor 1 up:", s.HallCalls[1][0]) // true
+	fmt.Println("Initialized Elevator id: ", id, " on port: ", Port)
+	fmt.Println("This system has ", config.NumFloors, " floors,",config.NumElevators, " elevators and ", config.NumButtons, " buttons per floor.")
 
-	// Test ClearOrder
-	s.ClearOrder(elevio.ButtonEvent{Floor: 2, Button: elevio.BT_Cab}, 0)
-	fmt.Println("CabCall floor 2 after clear:", s.Elevators[0].CabCalls[2]) // false
+	// Channels for communication between goroutines
+	newOrderCh 		:= make(chan elevator.Order, config.Buffer)
+	orderDoneCh 	:= make(chan elevio.ButtonEvent, config.Buffer)
+	stateUpdateCh 	:= make(chan elevator.State, config.Buffer)
+	CsConfirmedCh 	:= make(chan distributor.CommonState, config.Buffer)
+	networkTx 		:= make(chan distributor.CommonState, config.Buffer)
+	networkRx 		:= make(chan distributor.CommonState, config.Buffer)
+	peersTx 		:= make(chan bool, config.Buffer)
+	peersRx 		:= make(chan peers.PeerUpdate, config.Buffer)
 
-	// Test BeginUpdate
-	s.InitializeSolo(0)
-	s.BeginUpdate(0)
-	fmt.Println("OrderNum after BeginUpdate:", s.OrderNum) // 1
-	fmt.Println("Sender:", s.Sender)                       // 0
+	// Start goroutines
+	go peers.Receiver(config.PeersPortNumber, peersRx)
+	go peers.Transmitter(config.PeersPortNumber, strconv.Itoa(id), peersTx)
 
-	// Test AllAcknowledged - should be true since others are Offline
-	fmt.Println("AllAcknowledged:", s.AllAcknowledged(0)) // true
+	go bcast.Receiver(config.BcastPortNumber, networkRx)
+	go bcast.Transmitter(config.BcastPortNumber, networkTx)
 
-	// Test SameState
-	s2 := s
-	fmt.Println("SameState with copy:", s.SameState(s2)) // true
-	s2.HallCalls[0][0] = true
-	fmt.Println("SameState after mutation:", s.SameState(s2)) // false
+	go distributor.Synchronizer(id, stateUpdateCh, peersRx, networkTx, networkRx, CsConfirmedCh, orderDoneCh)
 
-	fmt.Println("All tests passed!")
+	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh)
+
+
+	for {
+		select {
+		case cs := <- CsConfirmedCh:
+			newOrderCh <- assigner.CostFunction(cs, id)
+			setlights.SetPanelLights(cs, id)
+		default:
+			continue
+		}
+	}
+}
+
 
 	/*
 	   elevio.Init("localhost:15657", numFloors)
@@ -95,4 +115,5 @@ func main() {
 	           }
 	       }
 	   }*/
-}
+
+

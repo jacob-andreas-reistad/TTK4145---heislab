@@ -60,7 +60,7 @@ func CostFunction(cs distributor.CommonState, ID int) elevator.Order {
 	}
 }
 
-
+/*
 func main() {
 
 	hraExecutable := ""
