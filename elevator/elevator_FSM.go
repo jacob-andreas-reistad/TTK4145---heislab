@@ -43,10 +43,12 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	closeDoorCh := make(chan bool)
 	doorObstructedCh := make(chan bool)
 	floorEnteredCh := make(chan int)
+	buttonCh := make(chan elevio.ButtonEvent)
 	motorCh := make(chan bool)
 
 	go doors(closeDoorCh, openDoorCh, doorObstructedCh)
 	go elevio.PollFloorSensor(floorEnteredCh)
+	go elevio.PollButtons(buttonCh)
 
 	elevio.SetMotorDirection(elevio.MD_Down)
 	state := State{Direction: Down, Behaviour: Moving}
@@ -215,6 +217,9 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 				state.Obstructed = obstructed
 				stateUpdateCh <- state
 			}
+
+		case buttonEvent := <-buttonCh:
+			orders[buttonEvent.Floor][buttonEvent.Button] = true
 		}
 	}
 }
