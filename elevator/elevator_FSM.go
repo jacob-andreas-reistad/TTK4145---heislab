@@ -25,7 +25,7 @@ const (
 	DoorsOpen
 )
 
-func (bh Behaviour) to_string() string {
+func (bh Behaviour) ToString() string {
 	switch bh {
 	case Idle:
 		return "Idle"
@@ -89,7 +89,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					stateUpdateCh <- state
 				}
 			default:
-				panic(fmt.Sprintf("Received close door signal while not in DoorsOpen state. Current state: %s", state.Behaviour.to_string()))
+				panic(fmt.Sprintf("Received close door signal while not in DoorsOpen state. Current state: %s", state.Behaviour.ToString()))
 			}
 		case state.Floor = <-floorEnteredCh:
 			elevio.SetFloorIndicator(state.Floor)
