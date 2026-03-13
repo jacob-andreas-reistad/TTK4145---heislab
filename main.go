@@ -3,15 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"heis/assigner"
 	"heis/config"
 	"heis/distributor"
 	"heis/elevator"
 	"heis/elevio"
 	"heis/lights"
-	"heis/network/bcast"
-	"heis/network/peers"
-	"strconv"
+	"heis/network"
 )
 
 var id int
