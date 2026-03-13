@@ -121,7 +121,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					stateUpdateCh <- state
 
 				case orders.has_orders(state.Direction.opposite(), state.Floor):
-					motorTimer := time.NewTimer(config.WatchdogTime)
+					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
 
 				case orders[state.Floor][state.Direction.opposite()]:
