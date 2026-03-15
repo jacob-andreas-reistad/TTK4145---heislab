@@ -57,8 +57,6 @@ func main() {
 		case cs := <-CsConfirmedCh:
 			newOrderCh <- assigner.CostFunction(cs, id)
 			lights.SetPanelLights(cs, id)
-		default:
-			continue
 		}
 	}
 }

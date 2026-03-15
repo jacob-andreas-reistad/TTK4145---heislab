@@ -44,6 +44,13 @@ func Synchronizer(
 	idle := true
 	disconnected := false
 
+	//Mark other elevators as  disconnected if we don't receive a heartbeat within the disconnect time
+	for i := 0; i < config.NumElevators; i++ {
+		if i != ElevID {
+			cs.Acks[i] = Disconnected
+		}
+	}
+
 	// Startup: ensure we reach a known floor
 	//elevio.SetMotorDirection(elevio.MD_Down)
 
@@ -118,6 +125,9 @@ func Synchronizer(
 					cs.Acks[ElevID] = Confirmed
 					cs.MakeLostElevatorsUnavailable(peers)
 
+				case arrivedCs.StateNum == cs.StateNum && arrivedCs.Sender == ElevID:
+					ackedCsCh <- arrivedCs
+
 				case arrivedCs.AllAcknowledged(ElevID):
 					cs = arrivedCs
 					ackedCsCh <- cs
@@ -161,11 +171,9 @@ func Synchronizer(
 			select {
 
 			case newButtonEvent := <-buttonEventCh:
-				if !cs.Elevators[ElevID].Current.MotorStop {
-					cs.Acks[ElevID] = Confirmed
-					cs.RegisterOrder(newButtonEvent, ElevID)
-					ackedCsCh <- cs
-				}
+				cs.Acks[ElevID] = Confirmed
+				cs.RegisterOrder(newButtonEvent, ElevID)
+				ackedCsCh <- cs
 
 			case completedOrder := <-completedOrderCh:
 				cs.Acks[ElevID] = Confirmed
