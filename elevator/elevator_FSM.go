@@ -64,21 +64,21 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 			case DoorsOpen:
 				switch {
 				case orders.has_orders(state.Direction, state.Floor):
-					elevio.SetMotorDirection(state.Direction.motor_direction())
+					elevio.SetMotorDirection(state.Direction.MotorDirection())
 					state.Behaviour = Moving
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
 					stateUpdateCh <- state
 
-				case orders[state.Floor][state.Direction.opposite()]:
+				case orders[state.Floor][state.Direction.Opposite()]:
 					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
+					state.Direction = state.Direction.Opposite()
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
 					stateUpdateCh <- state
 
-				case orders.has_orders(state.Direction.opposite(), state.Floor):
-					state.Direction = state.Direction.opposite()
-					elevio.SetMotorDirection(state.Direction.motor_direction())
+				case orders.has_orders(state.Direction.Opposite(), state.Floor):
+					state.Direction = state.Direction.Opposite()
+					elevio.SetMotorDirection(state.Direction.MotorDirection())
 					state.Behaviour = Moving
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
@@ -113,28 +113,28 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				case orders[state.Floor][elevio.BT_Cab] && !orders[state.Floor][state.Direction.opposite()]:
+				case orders[state.Floor][elevio.BT_Cab] && !orders[state.Floor][state.Direction.Opposite()]:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					openDoorCh <- true
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				case orders.has_orders(state.Direction.opposite(), state.Floor):
+				case orders.has_orders(state.Direction.Opposite(), state.Floor):
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
 
-				case orders[state.Floor][state.Direction.opposite()]:
+				case orders[state.Floor][state.Direction.Opposite()]:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
+					state.Direction = state.Direction.Opposite()
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
 				case orders.has_orders(state.Direction, state.Floor):
-					state.Direction = state.Direction.opposite()
-					elevio.SetMotorDirection(state.Direction.motor_direction())
+					state.Direction = state.Direction.Opposite()
+					elevio.SetMotorDirection(state.Direction.MotorDirection())
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
 					stateUpdateCh <- state
@@ -154,15 +154,15 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 			case Idle:
 				switch {
 				case orders.has_orders(state.Direction, state.Floor):
-					elevio.SetMotorDirection(state.Direction.motor_direction())
+					elevio.SetMotorDirection(state.Direction.MotorDirection())
 					state.Behaviour = Moving
 					stateUpdateCh <- state
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					motorCh <- false
 
-				case orders.has_orders(state.Direction.opposite(), state.Floor):
-					state.Direction = state.Direction.opposite()
-					elevio.SetMotorDirection(state.Direction.motor_direction())
+				case orders.has_orders(state.Direction.Opposite(), state.Floor):
+					state.Direction = state.Direction.Opposite()
+					elevio.SetMotorDirection(state.Direction.MotorDirection())
 					state.Behaviour = Moving
 					stateUpdateCh <- state
 					motorTimer = time.NewTimer(config.WatchdogTime)
@@ -174,9 +174,9 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				case orders[state.Floor][state.Direction.opposite()]:
+				case orders[state.Floor][state.Direction.Opposite()]:
 					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
+					state.Direction = state.Direction.Opposite()
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
