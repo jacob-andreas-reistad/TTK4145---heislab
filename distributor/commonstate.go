@@ -64,7 +64,10 @@ func (cs *CommonState) AllAcknowledged(self int) bool {
 		return false
 	}
 
-	for _, ack := range cs.Acks {
+	for i, ack := range cs.Acks {
+		if cs.Acks[i] == Disconnected {
+			continue
+		}
 		if ack == Pending {
 			return false
 		}

@@ -61,7 +61,7 @@ func Doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh ch
 			}
 
 		case <-time_counter.C:
-			if door_state == Open {
+			if door_state != Open {
 				panic("Door state undefined")
 			}
 			if obstruction {

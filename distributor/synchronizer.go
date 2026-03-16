@@ -37,6 +37,7 @@ func Synchronizer(
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
 	var tempStorage TempStorageType
+	var pendingButtons []elevio.ButtonEvent
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
@@ -112,6 +113,16 @@ func Synchronizer(
 			}
 		case !idle:
 			select {
+			case newButtonEvent = <-buttonEventCh:
+				if tempStorage == None {
+					tempStorage = AddOrder
+					cs.PrepNewCommonState(ElevID)
+					cs.RegisterOrder(newButtonEvent, ElevID)
+					cs.Acks[ElevID] = Confirmed
+				} else {
+					pendingButtons = append(pendingButtons, newButtonEvent)
+				}
+
 			case arrivedCs := <-networkRx: //new common state arrived while not idle
 				if arrivedCs.StateNum < cs.StateNum {
 					break
@@ -151,7 +162,16 @@ func Synchronizer(
 						}
 					case cs.Sender == ElevID && tempStorage != None:
 						tempStorage = None
-						idle = true
+						if len(pendingButtons) > 0 {
+							newButtonEvent = pendingButtons[0]
+							pendingButtons = pendingButtons[1:]
+							tempStorage = AddOrder
+							cs.PrepNewCommonState(ElevID)
+							cs.RegisterOrder(newButtonEvent, ElevID)
+							cs.Acks[ElevID] = Confirmed
+						} else {
+							idle = true
+						}
 
 					default:
 						idle = true

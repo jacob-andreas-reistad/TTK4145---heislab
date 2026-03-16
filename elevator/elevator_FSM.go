@@ -32,9 +32,9 @@ func (bh Behaviour) ToString() string {
 	case Moving:
 		return "moving"
 	case DoorsOpen:
-		return "doorOpen"
+		return "door open"
 	default:
-		panic("Invalid behaviour")
+		panic("invalid behaviour")
 	}
 }
 
@@ -48,10 +48,10 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	go Doors(closeDoorCh, openDoorCh, doorObstructedCh)
 	go elevio.PollFloorSensor(floorEnteredCh)
 
-	elevio.SetMotorDirection(elevio.MD_Down)
-	state := State{Direction: Down, Behaviour: Moving}
-
+	state := State{Floor: 0, Direction: Down, Behaviour: Moving}
 	var orders Order
+
+	elevio.SetMotorDirection(elevio.MD_Down)
 
 	motorTimer := time.NewTimer(config.WatchdogTime)
 	motorTimer.Stop()
