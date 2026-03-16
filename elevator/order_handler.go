@@ -9,7 +9,7 @@ import (
 
 type Order [config.NumFloors][config.NumButtons]bool
 
-func (o Order) has_orders(direction MotorDirection, floor int) bool {
+func (o Order) HasOrder(direction MotorDirection, floor int) bool {
 	switch direction {
 
 	case Up:
@@ -36,7 +36,7 @@ func (o Order) has_orders(direction MotorDirection, floor int) bool {
 	}
 }
 
-func order_complete(o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
+func OrderComplete(o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
 	if o[floor][elevio.BT_Cab] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 	}
