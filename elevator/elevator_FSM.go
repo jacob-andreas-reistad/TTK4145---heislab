@@ -45,7 +45,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	floorEnteredCh := make(chan int)
 	motorCh := make(chan bool)
 
-	go doors(closeDoorCh, openDoorCh, doorObstructedCh)
+	go Doors(closeDoorCh, openDoorCh, doorObstructedCh)
 	go elevio.PollFloorSensor(floorEnteredCh)
 
 	elevio.SetMotorDirection(elevio.MD_Down)

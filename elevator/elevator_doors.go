@@ -16,7 +16,7 @@ const (
 	Open
 )
 
-func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh chan<- bool) {
+func Doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh chan<- bool) {
 	elevio.SetDoorOpenLamp(false)
 
 	obstructionCh := make(chan bool)
