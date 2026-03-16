@@ -44,7 +44,7 @@ func Synchronizer(
 	idle := true
 	disconnected := false
 
-	// Startup: ensure we reach a known floor
+	//Startup: ensure we reach a known floor
 	//elevio.SetMotorDirection(elevio.MD_Down)
 
 	//BIG ASS SWITCH CASE GOES HERE:

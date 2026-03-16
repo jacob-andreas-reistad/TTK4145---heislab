@@ -29,9 +29,9 @@ func main() {
 	fmt.Println("CabCall floor 2 after clear:", s.Elevators[0].CabCalls[2]) // false
 
 	// Test BeginUpdate
-	s.InitializeSolo(0)
-	s.BeginUpdate(0)
-	fmt.Println("OrderNum after BeginUpdate:", s.OrderNum) // 1
+	s.MakeOtherElevatorsUnavailable(0)
+	s.PrepNewCommonState(0)
+	fmt.Println("OrderNum after BeginUpdate:", s.StateNum) // 1
 	fmt.Println("Sender:", s.Sender)                       // 0
 
 	// Test AllAcknowledged - should be true since others are Offline
@@ -39,9 +39,9 @@ func main() {
 
 	// Test SameState
 	s2 := s
-	fmt.Println("SameState with copy:", s.SameState(s2)) // true
+	fmt.Println("SameState with copy:", s.CheckSameState(s2)) // true
 	s2.HallCalls[0][0] = true
-	fmt.Println("SameState after mutation:", s.SameState(s2)) // false
+	fmt.Println("SameState after mutation:", s.CheckSameState(s2)) // false
 
 	fmt.Println("All tests passed!")
 
