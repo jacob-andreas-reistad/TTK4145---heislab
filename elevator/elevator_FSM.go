@@ -28,11 +28,11 @@ const (
 func (bh Behaviour) ToString() string {
 	switch bh {
 	case Idle:
-		return "Idle"
+		return "idle"
 	case Moving:
-		return "Moving"
+		return "moving"
 	case DoorsOpen:
-		return "Doors Open"
+		return "doorOpen"
 	default:
 		panic("Invalid behaviour")
 	}
