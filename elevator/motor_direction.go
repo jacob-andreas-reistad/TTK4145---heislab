@@ -13,7 +13,7 @@ const (
 )
 
 
-func (md MotorDirection) motor_direction() elevio.MotorDirection {
+func (md MotorDirection) MotorDirection() elevio.MotorDirection {
 	switch md {
 	case Up:
 		return elevio.MD_Up
@@ -24,7 +24,7 @@ func (md MotorDirection) motor_direction() elevio.MotorDirection {
 	}
 }
 
-func (md MotorDirection) button_type() elevio.ButtonType {
+func (md MotorDirection) ButtonType() elevio.ButtonType {
 	switch md {
 	case Up:
 		return elevio.BT_HallUp
@@ -35,7 +35,7 @@ func (md MotorDirection) button_type() elevio.ButtonType {
 	}
 }
 
-func (md MotorDirection) opposite() MotorDirection {
+func (md MotorDirection) Opposite() MotorDirection {
 	switch md {
 	case Up:
 		return Down
@@ -49,10 +49,10 @@ func (md MotorDirection) opposite() MotorDirection {
 func (md MotorDirection) ToString() string {
 	switch md {
 	case Up:
-		return "Up"
+		return "up"
 	case Down:
-		return "Down"
+		return "down"
 	default:
-		return "Stop"
+		return "stop"
 	}
 }
