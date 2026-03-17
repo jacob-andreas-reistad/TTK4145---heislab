@@ -48,9 +48,8 @@ func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh ch
 
 		case obstruction = <-obstructionCh:
 			if door_state == Obstructed && !obstruction {
-				elevio.SetDoorOpenLamp(false)
-				doorClosedCh <- true
-				door_state = Closed
+				time_counter = time.NewTimer(config.DoorOpenDuration)
+				door_state = Open
 			}
 			if obstruction {
 				doorObstructedCh <- true
