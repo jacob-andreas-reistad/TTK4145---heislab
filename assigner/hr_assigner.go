@@ -43,6 +43,10 @@ func CostFunction(cs distributor.CommonState, ID int) elevator.Order {
 
 	Input := HRAInput{cs.HallCalls, ElevStates}
 
+	if len(ElevStates) == 0 {
+		return elevator.Order{}
+	}
+
 	Executable := ""
 	switch runtime.GOOS {
 	case "linux":
