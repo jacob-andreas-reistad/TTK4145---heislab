@@ -1,6 +1,7 @@
 package distributor
 
 import (
+	"fmt"
 	"heis/config"
 	"heis/elevator"
 	"heis/elevio"
@@ -44,12 +45,31 @@ func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 }
 
 func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
+	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
+	fmt.Printf("[ORDER DONE] floor=%d button=%s\n", btn.Floor, btnName[btn.Button])
+
 	switch btn.Button {
 	case elevio.BT_Cab:
 		cs.Elevators[id].CabCalls[btn.Floor] = false
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = false
 	}
+
+	fmt.Print("[ORDERS] HallCalls: ")
+	for floor := 0; floor < config.NumFloors; floor++ {
+		if cs.HallCalls[floor][elevio.BT_HallUp] || cs.HallCalls[floor][elevio.BT_HallDown] {
+			up := "-"
+			down := "-"
+			if cs.HallCalls[floor][elevio.BT_HallUp] {
+				up = "Up"
+			}
+			if cs.HallCalls[floor][elevio.BT_HallDown] {
+				down = "Down"
+			}
+			fmt.Printf("f%d[%s/%s] ", floor, up, down)
+		}
+	}
+	fmt.Println()
 }
 
 func (cs *CommonState) UpdateElevatorState(id int, state elevator.State) {
