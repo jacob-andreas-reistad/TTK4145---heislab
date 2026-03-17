@@ -70,12 +70,6 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					motorCh <- false
 					stateUpdateCh <- state
 
-				case orders[state.Floor][state.Direction.opposite().button_type()]:
-					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
-					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
-					stateUpdateCh <- state
-
 				case orders.has_orders(state.Direction.opposite(), state.Floor):
 					state.Direction = state.Direction.opposite()
 					elevio.SetMotorDirection(state.Direction.motor_direction())
@@ -125,14 +119,6 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					!(state.Floor == config.NumFloors-1 && state.Direction == Up):
 					motorTimer = time.NewTimer(config.WatchdogTime)
 
-				case orders[state.Floor][state.Direction.opposite().button_type()]:
-					elevio.SetMotorDirection(elevio.MD_Stop)
-					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
-					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
-					state.Behaviour = DoorsOpen
-					stateUpdateCh <- state
-
 				default:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					state.Behaviour = Idle
@@ -163,13 +149,6 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 
 				case orders[state.Floor][state.Direction.button_type()] || orders[state.Floor][elevio.BT_Cab]:
 					openDoorCh <- true
-					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
-					state.Behaviour = DoorsOpen
-					stateUpdateCh <- state
-
-				case orders[state.Floor][state.Direction.opposite().button_type()]:
-					openDoorCh <- true
-					state.Direction = state.Direction.opposite()
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
