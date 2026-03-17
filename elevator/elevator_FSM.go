@@ -12,11 +12,12 @@ import (
 type Behaviour int
 
 type State struct {
-	Floor      int
-	Direction  MotorDirection
-	Obstructed bool
-	Behaviour  Behaviour
-	MotorStop  bool
+	Floor           int
+	Direction       MotorDirection
+	Obstructed      bool
+	Behaviour       Behaviour
+	MotorStop       bool
+	LastServedFloor int
 }
 
 const (
@@ -49,10 +50,9 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	go elevio.PollFloorSensor(floorEnteredCh)
 
 	elevio.SetMotorDirection(elevio.MD_Down)
-	state := State{Direction: Down, Behaviour: Moving}
+	state := State{Direction: Down, Behaviour: Moving, LastServedFloor: -1}
 
 	var orders Order
-	lastServedFloor := -1
 
 	motorTimer := time.NewTimer(config.WatchdogTime)
 	motorTimer.Stop()
@@ -98,7 +98,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					openDoorCh <- true
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
-					lastServedFloor = state.Floor
+					state.LastServedFloor = state.Floor
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
@@ -155,7 +155,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				case orders[state.Floor][state.Direction.opposite().button_type()] && state.Floor != lastServedFloor:
+				case orders[state.Floor][state.Direction.opposite().button_type()] && state.Floor != state.LastServedFloor:
 					openDoorCh <- true
 					state.Direction = state.Direction.opposite()
 					order_complete(orders, state.Direction, state.Floor, orderDoneCh)

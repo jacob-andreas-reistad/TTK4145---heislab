@@ -31,13 +31,19 @@ func CostFunction(cs distributor.CommonState, ID int) elevator.Order {
 	for i, j := range cs.Elevators {
 		if cs.Acks[i] == distributor.Disconnected || j.Current.MotorStop {
 			continue
-		} else {
-			ElevStates[strconv.Itoa(i)] = HRAElevState{
-				Behavior:    j.Current.Behaviour.ToString(),
-				Floor:       j.Current.Floor,
-				Direction:   j.Current.Direction.ToString(),
-				CabRequests: j.CabCalls,
+		}
+		if j.Current.Behaviour == elevator.Idle && j.Current.LastServedFloor == j.Current.Floor {
+			dir := j.Current.Direction.ToString()
+			if (dir == "up" && cs.HallCalls[j.Current.Floor][1]) ||
+				(dir == "down" && cs.HallCalls[j.Current.Floor][0]) {
+				continue
 			}
+		}
+		ElevStates[strconv.Itoa(i)] = HRAElevState{
+			Behavior:    j.Current.Behaviour.ToString(),
+			Floor:       j.Current.Floor,
+			Direction:   j.Current.Direction.ToString(),
+			CabRequests: j.CabCalls,
 		}
 	}
 
