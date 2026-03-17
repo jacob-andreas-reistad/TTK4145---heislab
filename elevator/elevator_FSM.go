@@ -153,6 +153,13 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
+				case orders[state.Floor][state.Direction.opposite().button_type()]:
+					openDoorCh <- true
+					state.Direction = state.Direction.opposite()
+					order_complete(orders, state.Direction, state.Floor, orderDoneCh)
+					state.Behaviour = DoorsOpen
+					stateUpdateCh <- state
+
 				default:
 				}
 
