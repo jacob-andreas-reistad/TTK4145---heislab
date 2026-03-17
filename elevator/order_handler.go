@@ -40,7 +40,7 @@ func order_complete(o Order, direction MotorDirection, floor int, orderDoneCh ch
 	if o[floor][elevio.BT_Cab] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 	}
-	if o[floor][direction] {
+	if o[floor][direction.button_type()] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: direction.button_type()}
 	}
 }
