@@ -43,4 +43,5 @@ func order_complete(o Order, direction MotorDirection, floor int, orderDoneCh ch
 	if o[floor][direction.button_type()] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: direction.button_type()}
 	}
+
 }
