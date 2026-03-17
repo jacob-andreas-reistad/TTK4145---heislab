@@ -31,9 +31,7 @@ func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh ch
 		select {
 
 		case <-doorOpenCh:
-			if obstruction {
-				obstructionCh <- true
-			}
+
 			switch door_state {
 			case Open:
 				time_counter = time.NewTimer(config.DoorOpenDuration)
@@ -61,9 +59,6 @@ func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh ch
 			}
 
 		case <-time_counter.C:
-			if door_state == Open {
-				panic("Door state undefined")
-			}
 			if obstruction {
 				door_state = Obstructed
 			} else {

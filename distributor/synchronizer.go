@@ -60,7 +60,7 @@ func Synchronizer(
 		//case heisen er ikke idle (se eksempel i EirikIsAChamp)
 		//idle = false
 		case peers = <-peersCh:
-			cs.MakeOtherElevatorsUnavailable(ElevID)
+			cs.MakeLostElevatorsUnavailable(peers)
 			idle = false
 
 		case <-heartbeat.C:
@@ -70,6 +70,40 @@ func Synchronizer(
 		}
 
 		switch {
+		case disconnected:
+			select {
+
+			case newButtonEvent := <-buttonEventCh:
+				if !cs.Elevators[ElevID].Current.MotorStop {
+					cs.Acks[ElevID] = Confirmed
+					cs.RegisterOrder(newButtonEvent, ElevID)
+					ackedCsCh <- cs
+				}
+
+			case completedOrder := <-completedOrderCh:
+				cs.Acks[ElevID] = Confirmed
+				cs.ClearOrder(completedOrder, ElevID)
+				ackedCsCh <- cs
+
+			case newLocalState := <-localStateCh:
+				if !(newLocalState.Obstructed || newLocalState.MotorStop) {
+					cs.Acks[ElevID] = Confirmed
+					cs.UpdateElevatorState(ElevID, newLocalState)
+					ackedCsCh <- cs
+				}
+
+			case <-networkRx:
+				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
+					fmt.Println("Connection restored to network.")
+					disconnected = false
+				} else {
+					cs.Acks[ElevID] = Disconnected
+					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
+				}
+
+			default:
+			}
+
 		case idle:
 			select {
 			case newButtonEvent = <-buttonEventCh: //new button press
@@ -156,41 +190,6 @@ func Synchronizer(
 				}
 			default:
 			}
-
-		case disconnected:
-			select {
-
-			case newButtonEvent := <-buttonEventCh:
-				if !cs.Elevators[ElevID].Current.MotorStop {
-					cs.Acks[ElevID] = Confirmed
-					cs.RegisterOrder(newButtonEvent, ElevID)
-					ackedCsCh <- cs
-				}
-
-			case completedOrder := <-completedOrderCh:
-				cs.Acks[ElevID] = Confirmed
-				cs.ClearOrder(completedOrder, ElevID)
-				ackedCsCh <- cs
-
-			case newLocalState := <-localStateCh:
-				if !(newLocalState.Obstructed || newLocalState.MotorStop) {
-					cs.Acks[ElevID] = Confirmed
-					cs.UpdateElevatorState(ElevID, newLocalState)
-					ackedCsCh <- cs
-				}
-
-			case <-networkRx:
-				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
-					fmt.Println("Connection restored to network.")
-					disconnected = false
-				} else {
-					cs.Acks[ElevID] = Disconnected
-					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
-				}
-
-			default:
-			}
-
 		}
 		_ = tempStorage
 		//default (heisen er idle:)

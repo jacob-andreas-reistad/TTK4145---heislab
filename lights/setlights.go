@@ -1,4 +1,4 @@
-package setlights
+package lights
 
 import (
 	"heis/config"

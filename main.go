@@ -8,7 +8,10 @@ import (
 	"heis/elevator"
 	"heis/elevio"
 	"heis/lights"
-	"heis/network"
+	"heis/network/peers"
+	"heis/network/bcast"
+	"heis/assigner"
+	"strconv"
 )
 
 var id int

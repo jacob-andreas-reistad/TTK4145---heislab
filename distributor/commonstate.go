@@ -81,15 +81,22 @@ func (cs CommonState) CheckSameState(newCs CommonState) bool {
 }
 
 func (cs *CommonState) MakeLostElevatorsUnavailable(peerList peers.PeerUpdate) {
-
-	for _, lost := range peerList.Lost {
-		lostID, err := strconv.Atoi(lost)
-		if err != nil {
-			continue
+	for i := range cs.Acks {
+		found := false
+		for _, peer := range peerList.Peers {
+			peerID, err := strconv.Atoi(peer)
+			if err != nil {
+				continue
+			}
+			if peerID == i {
+				found = true
+				break
+			}
 		}
-		cs.Acks[lostID] = Disconnected
+		if !found {
+			cs.Acks[i] = Disconnected
+		}
 	}
-
 }
 
 func (cs *CommonState) MakeOtherElevatorsUnavailable(id int) {

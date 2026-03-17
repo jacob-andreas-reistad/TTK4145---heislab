@@ -12,7 +12,6 @@ const (
 	Down MotorDirection = -1
 )
 
-
 func (md MotorDirection) motor_direction() elevio.MotorDirection {
 	switch md {
 	case Up:
@@ -49,10 +48,10 @@ func (md MotorDirection) opposite() MotorDirection {
 func (md MotorDirection) ToString() string {
 	switch md {
 	case Up:
-		return "Up"
+		return "up"
 	case Down:
-		return "Down"
+		return "down"
 	default:
-		return "Stop"
+		return "stop"
 	}
 }
