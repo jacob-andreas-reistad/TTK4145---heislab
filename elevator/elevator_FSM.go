@@ -80,7 +80,6 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					stateUpdateCh <- state
 
 				default:
-					lastServedFloor = -1
 					state.Behaviour = Idle
 					stateUpdateCh <- state
 				}
