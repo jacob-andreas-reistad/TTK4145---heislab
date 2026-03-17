@@ -34,6 +34,41 @@ type CommonState struct {
 	Elevators [config.NumElevators]Elevator
 }
 
+func (cs *CommonState) printOrders() {
+	fmt.Printf("  %-10s", "")
+	for f := 0; f < config.NumFloors; f++ {
+		fmt.Printf(" F%-3d", f)
+	}
+	fmt.Println()
+
+	rows := []struct {
+		label  string
+		values func(f int) bool
+	}{
+		{"Hall Up", func(f int) bool { return cs.HallCalls[f][elevio.BT_HallUp] }},
+		{"Hall Dn", func(f int) bool { return cs.HallCalls[f][elevio.BT_HallDown] }},
+	}
+	for id := 0; id < config.NumElevators; id++ {
+		idCopy := id
+		rows = append(rows, struct {
+			label  string
+			values func(f int) bool
+		}{fmt.Sprintf("Cab [%d]", idCopy), func(f int) bool { return cs.Elevators[idCopy].CabCalls[f] }})
+	}
+
+	for _, row := range rows {
+		fmt.Printf("  %-10s", row.label)
+		for f := 0; f < config.NumFloors; f++ {
+			if row.values(f) {
+				fmt.Printf("  *  ")
+			} else {
+				fmt.Printf("  .  ")
+			}
+		}
+		fmt.Println()
+	}
+}
+
 // Bør evt splittes i to, en hallcall og en cabcall
 func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
@@ -42,34 +77,21 @@ func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = true
 	}
+	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
+	fmt.Printf("[NEW ORDER] floor=%d  button=%s\n", btn.Floor, btnName[btn.Button])
+	cs.printOrders()
 }
 
 func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
-	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
-	fmt.Printf("[ORDER DONE] floor=%d button=%s\n", btn.Floor, btnName[btn.Button])
-
 	switch btn.Button {
 	case elevio.BT_Cab:
 		cs.Elevators[id].CabCalls[btn.Floor] = false
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = false
 	}
-
-	fmt.Print("[ORDERS] HallCalls: ")
-	for floor := 0; floor < config.NumFloors; floor++ {
-		if cs.HallCalls[floor][elevio.BT_HallUp] || cs.HallCalls[floor][elevio.BT_HallDown] {
-			up := "-"
-			down := "-"
-			if cs.HallCalls[floor][elevio.BT_HallUp] {
-				up = "Up"
-			}
-			if cs.HallCalls[floor][elevio.BT_HallDown] {
-				down = "Down"
-			}
-			fmt.Printf("f%d[%s/%s] ", floor, up, down)
-		}
-	}
-	fmt.Println()
+	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
+	fmt.Printf("[ORDER DONE] floor=%d  button=%s\n", btn.Floor, btnName[btn.Button])
+	cs.printOrders()
 }
 
 func (cs *CommonState) UpdateElevatorState(id int, state elevator.State) {
