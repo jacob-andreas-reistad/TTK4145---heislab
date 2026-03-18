@@ -73,6 +73,15 @@ func Synchronizer(
 		case disconnected:
 			select {
 
+			case <-networkRx:
+				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
+					fmt.Println("Connection restored to network.")
+					disconnected = false
+				} else {
+					cs.Acks[ElevID] = Disconnected
+					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
+				}
+
 			case newButtonEvent := <-buttonEventCh:
 				if !cs.Elevators[ElevID].Current.MotorStop {
 					cs.Acks[ElevID] = Confirmed
@@ -90,15 +99,6 @@ func Synchronizer(
 					cs.Acks[ElevID] = Confirmed
 					cs.UpdateElevatorState(ElevID, newLocalState)
 					ackedCsCh <- cs
-				}
-
-			case <-networkRx:
-				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
-					fmt.Println("Connection restored to network.")
-					disconnected = false
-				} else {
-					cs.Acks[ElevID] = Disconnected
-					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
 				}
 
 			default:
