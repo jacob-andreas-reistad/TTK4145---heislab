@@ -29,7 +29,7 @@ type HRAInput struct {
 func CostFunction(cs distributor.CommonState, ID int) elevator.Order {
 	ElevStates := make(map[string]HRAElevState)
 	for i, j := range cs.Elevators {
-		if cs.Acks[i] == distributor.Disconnected || j.Current.MotorStop || j.Current.Obstructed{
+		if cs.Acks[i] == distributor.Disconnected || j.Current.MotorStop {
 			
 			continue
 		}

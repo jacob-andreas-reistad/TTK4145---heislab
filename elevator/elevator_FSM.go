@@ -212,9 +212,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					obstructionTimer.Stop()
 					state.MotorStop = false
 					stateUpdateCh <- state
-
 				}
-				stateUpdateCh <- state
 			}
 		case <-obstructionTimer.C:
 			if !state.MotorStop {
