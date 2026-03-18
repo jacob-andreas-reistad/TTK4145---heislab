@@ -1,6 +1,9 @@
 # Elevator Instructions
-1) do stuff
-2) do some more stuff
+1) Define system parameters in config.go:
+    - number of elevators 
+    - number of floors
+    - etc. (see config.go)
+2) Run the command from terminal: go run main.go -id=x -port=xxxxx
 3) Shazam!
 
 
