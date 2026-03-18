@@ -46,7 +46,7 @@ func main() {
 	go bcast.Transmitter(config.BcastPortNumber, networkTx)
 
 	go distributor.Synchronizer(id, stateUpdateCh, peersRx, networkTx, networkRx, CsConfirmedCh, orderDoneCh)
-	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh)
+	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh, distributor.LoadDirection(id))
 
 	for {
 		cs := <-CsConfirmedCh

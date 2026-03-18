@@ -39,7 +39,7 @@ func (bh Behaviour) ToString() string {
 	}
 }
 
-func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, stateUpdateCh chan<- State) {
+func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, stateUpdateCh chan<- State, savedDir MotorDirection) {
 	openDoorCh := make(chan bool)
 	closeDoorCh := make(chan bool)
 	doorObstructedCh := make(chan bool)
@@ -49,8 +49,18 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	go doors(closeDoorCh, openDoorCh, doorObstructedCh)
 	go elevio.PollFloorSensor(floorEnteredCh)
 
-	elevio.SetMotorDirection(elevio.MD_Down)
-	state := State{Direction: Down, Behaviour: Moving, LastServedFloor: -1}
+	elevio.SetMotorDirection(elevio.MD_Stop)
+	time.Sleep(50 * time.Millisecond)
+	initialFloor := elevio.GetFloor()
+	var state State
+	if initialFloor != -1 {
+		state = State{Direction: savedDir, Behaviour: Idle, Floor: initialFloor, LastServedFloor: -1}
+		elevio.SetFloorIndicator(initialFloor)
+		stateUpdateCh <- state
+	} else {
+		elevio.SetMotorDirection(savedDir.motor_direction())
+		state = State{Direction: savedDir, Behaviour: Moving, LastServedFloor: -1}
+	}
 
 	var orders Order
 
@@ -127,7 +137,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					stateUpdateCh <- state
 				}
 			default:
-				panic("Recieved floor entered in wrong state")
+				// Idle or DoorsOpen: just update floor position
 			}
 
 		case orders = <-newOrderCh:

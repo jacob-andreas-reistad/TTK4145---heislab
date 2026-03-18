@@ -32,6 +32,7 @@ func Synchronizer(
 	go elevio.PollButtons(buttonEventCh)
 
 	var cs CommonState
+	cs.Elevators[ElevID].CabCalls = LoadCabCalls(ElevID)
 	var peers peers.PeerUpdate
 	var newLocalState elevator.State
 	var completedOrder elevio.ButtonEvent
@@ -121,6 +122,7 @@ func Synchronizer(
 				idle = false
 
 			case newLocalState = <-localStateCh: //local state changes
+				SaveDirection(ElevID, newLocalState.Direction)
 				tempStorage = UpdateState
 				cs.PrepNewCommonState(ElevID)
 				cs.UpdateElevatorState(ElevID, newLocalState)
