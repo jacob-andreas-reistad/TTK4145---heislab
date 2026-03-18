@@ -154,6 +154,7 @@ func Synchronizer(
 
 				case arrivedCs.AllAcknowledged(ElevID):
 					cs = arrivedCs
+					cs.printOrders()
 					ackedCsCh <- cs
 
 					switch {
