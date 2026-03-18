@@ -65,7 +65,9 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 	var orders Order
 
 	motorTimer := time.NewTimer(config.WatchdogTime)
+	obstructionTimer := time.NewTimer(config.WatchdogTime)
 	motorTimer.Stop()
+	obstructionTimer.Stop()
 
 	for {
 		select {
@@ -204,6 +206,17 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 		case obstructed := <-doorObstructedCh:
 			if obstructed != state.Obstructed {
 				state.Obstructed = obstructed
+				if obstructed {
+					obstructionTimer = time.NewTimer(config.WatchdogTime)
+				} else {
+					obstructionTimer.Stop()
+				}
+				stateUpdateCh <- state
+			}
+		case <-obstructionTimer.C:
+			if !state.MotorStop {
+				fmt.Println("obstruction timeout - marking unavailable")
+				state.MotorStop = true
 				stateUpdateCh <- state
 			}
 		}
