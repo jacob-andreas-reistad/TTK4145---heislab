@@ -193,19 +193,5 @@ func Synchronizer(
 			}
 		}
 		_ = tempStorage
-		//default (heisen er idle:)
-		//switch
-		//case idle:
-		//select
-		//case1, case2 osv.
-
-		//case !idle:
-		//select
-		//case1,case2,case3 osv.
-
-		//case offline:
-		// select
-		//case2,case2,case3 osv.
-
 	}
 }
