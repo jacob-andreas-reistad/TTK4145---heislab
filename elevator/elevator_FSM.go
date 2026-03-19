@@ -82,7 +82,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					elevio.SetMotorDirection(state.Direction.motor_direction())
 					state.Behaviour = Moving
 					motorTimer = time.NewTimer(config.WatchdogTime)
-					motorCh <- false
+					select { case motorCh <- false: default: }
 					stateUpdateCh <- state
 
 				case orders.has_orders(state.Direction.opposite(), state.Floor):
@@ -90,7 +90,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					elevio.SetMotorDirection(state.Direction.motor_direction())
 					state.Behaviour = Moving
 					motorTimer = time.NewTimer(config.WatchdogTime)
-					motorCh <- false
+					select { case motorCh <- false: default: }
 					stateUpdateCh <- state
 
 				default:
@@ -103,7 +103,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 		case state.Floor = <-floorEnteredCh:
 			elevio.SetFloorIndicator(state.Floor)
 			motorTimer.Stop()
-			motorCh <- false
+			select { case motorCh <- false: default: }
 
 			switch state.Behaviour {
 			case Moving:
@@ -166,7 +166,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = Moving
 					stateUpdateCh <- state
 					motorTimer = time.NewTimer(config.WatchdogTime)
-					motorCh <- false
+					select { case motorCh <- false: default: }
 
 				case orders.has_orders(state.Direction.opposite(), state.Floor):
 					state.Direction = state.Direction.opposite()
@@ -174,7 +174,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = Moving
 					stateUpdateCh <- state
 					motorTimer = time.NewTimer(config.WatchdogTime)
-					motorCh <- false
+					select { case motorCh <- false: default: }
 
 				default:
 				}
