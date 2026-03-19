@@ -80,10 +80,22 @@ func Synchronizer(
 		case disconnected:
 			select {
 
-			case <-networkRx:
+			case arrivedCs := <-networkRx:
 				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
 					fmt.Println("Connection restored to network.")
+					for f := range cs.HallCalls {
+						for b := range cs.HallCalls[f] {
+							if cs.HallCalls[f][b] {
+								arrivedCs.HallCalls[f][b] = true
+							}
+						}
+					}
+					cs = arrivedCs
+					cs.PrepNewCommonState(ElevID)
+					cs.MakeLostElevatorsUnavailable(peers)
+					cs.Acks[ElevID] = Confirmed
 					disconnected = false
+					idle = false
 				} else {
 					cs.Acks[ElevID] = Disconnected
 					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
