@@ -66,8 +66,10 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 
 	motorTimer := time.NewTimer(config.WatchdogTime)
 	obstructionTimer := time.NewTimer(config.WatchdogTime)
+	motorRetryTimer := time.NewTimer(500 * time.Millisecond)
 	motorTimer.Stop()
 	obstructionTimer.Stop()
+	motorRetryTimer.Stop()
 
 	for {
 		select {
@@ -194,12 +196,20 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 				fmt.Println("motor power lost")
 				state.MotorStop = true
 				stateUpdateCh <- state
+				motorRetryTimer = time.NewTimer(500 * time.Millisecond)
+			}
+
+		case <-motorRetryTimer.C:
+			if state.MotorStop {
+				elevio.SetMotorDirection(state.Direction.motor_direction())
+				motorRetryTimer = time.NewTimer(500 * time.Millisecond)
 			}
 
 		case motor := <-motorCh:
 			if state.MotorStop {
 				fmt.Println("motor power restored")
 				state.MotorStop = motor
+				motorRetryTimer.Stop()
 				stateUpdateCh <- state
 			}
 
