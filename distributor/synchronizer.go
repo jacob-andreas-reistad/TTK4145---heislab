@@ -51,17 +51,23 @@ func Synchronizer(
 	//BIG ASS SWITCH CASE GOES HERE:
 	for {
 		select {
-		//case heisen går offline
-		// disconnected = true
+		//case: vi tar heisen offline
+		//disconnected = true
 		case <-disconnectTimer.C:
 			cs.MakeOtherElevatorsUnavailable(ElevID)
-			fmt.Println("Lost connction")
+			fmt.Printf("[network] Elevator %d disconnected - running solo\n", ElevID)
 			disconnected = true
 
 		//case heisen er ikke idle (se eksempel i EirikIsAChamp)
 		//idle = false
 		case peers = <-peersCh:
 			cs.MakeLostElevatorsUnavailable(peers)
+			for _, lostID := range peers.Lost {
+				fmt.Printf("[network] Elevator %s lost connection\n", lostID)
+			}
+			if peers.New != "" {
+				fmt.Printf("[network] Elevator %s joined the network\n", peers.New)
+			}
 			idle = false
 
 		case <-heartbeat.C:
