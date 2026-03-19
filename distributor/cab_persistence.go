@@ -65,3 +65,36 @@ func loadPersistState(elevID int) persistState {
 	}
 	return state
 }
+
+func offlineHallCallsFilename(elevID int) string {
+	return fmt.Sprintf("offline_halls_%d.json", elevID)
+}
+
+func SaveOfflineHallCalls(elevID int, halls [config.NumFloors][2]bool) {
+	data, err := json.Marshal(halls)
+	if err != nil {
+		fmt.Println("[persistence] Failed to marshal offline hall calls:", err)
+		return
+	}
+	err = os.WriteFile(offlineHallCallsFilename(elevID), data, 0644)
+	if err != nil {
+		fmt.Println("[persistence] Failed to write offline hall calls:", err)
+	}
+}
+
+func LoadOfflineHallCalls(elevID int) [config.NumFloors][2]bool {
+	var halls [config.NumFloors][2]bool
+	data, err := os.ReadFile(offlineHallCallsFilename(elevID))
+	if err != nil {
+		return halls
+	}
+	err = json.Unmarshal(data, &halls)
+	if err != nil {
+		fmt.Println("[persistence] Failed to parse offline hall calls:", err)
+	}
+	return halls
+}
+
+func ClearOfflineHallCalls(elevID int) {
+	os.Remove(offlineHallCallsFilename(elevID))
+}

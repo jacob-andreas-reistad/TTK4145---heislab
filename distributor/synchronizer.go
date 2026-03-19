@@ -38,13 +38,20 @@ func Synchronizer(
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
 	var tempStorage TempStorageType
-	var completedWhileOffline []elevio.ButtonEvent
+	offlineHallCalls := LoadOfflineHallCalls(ElevID)
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
 
 	idle := true
 	disconnected := false
+
+	// If there are persisted offline hall calls from a previous crash, start in disconnected mode
+	if offlineHallCalls != ([config.NumFloors][2]bool{}) {
+		disconnected = true
+		cs.MakeOtherElevatorsUnavailable(ElevID)
+		fmt.Printf("[network] Elevator %d has pending offline hall calls - starting in disconnected mode\n", ElevID)
+	}
 
 	// Startup: ensure we reach a known floor
 	//elevio.SetMotorDirection(elevio.MD_Down)
@@ -82,41 +89,57 @@ func Synchronizer(
 			select {
 
 			case arrivedCs := <-networkRx:
-				if cs.Elevators[ElevID].CabCalls == [config.NumFloors]bool{} {
-					fmt.Println("Connection restored to network.")
-					for f := range cs.HallCalls {
-						for b := range cs.HallCalls[f] {
-							if cs.HallCalls[f][b] {
-								arrivedCs.HallCalls[f][b] = true
-							}
+				fmt.Println("[network] Connection restored - merging offline state")
+
+				// Merge hall calls created while offline into the network state
+				for f := range offlineHallCalls {
+					for b := range offlineHallCalls[f] {
+						if offlineHallCalls[f][b] {
+							arrivedCs.HallCalls[f][b] = true
 						}
 					}
-					for _, done := range completedWhileOffline {
-						arrivedCs.HallCalls[done.Floor][done.Button] = false
-					}
-					completedWhileOffline = nil
-					cs = arrivedCs
-					cs.PrepNewCommonState(ElevID)
-					cs.MakeLostElevatorsUnavailable(peers)
-					cs.Acks[ElevID] = Confirmed
-					disconnected = false
-					idle = false
-				} else {
-					cs.Acks[ElevID] = Disconnected
-					fmt.Println("Network connection lost. Cab calls will be cleared when completed.")
 				}
+
+				// Merge local cab calls (only we know our cab state while offline)
+				for f := 0; f < config.NumFloors; f++ {
+					if cs.Elevators[ElevID].CabCalls[f] {
+						arrivedCs.Elevators[ElevID].CabCalls[f] = true
+					}
+				}
+
+				// Update our elevator state in the network view
+				arrivedCs.Elevators[ElevID].Current = cs.Elevators[ElevID].Current
+
+				// Clear offline tracking
+				offlineHallCalls = [config.NumFloors][2]bool{}
+				ClearOfflineHallCalls(ElevID)
+
+				cs = arrivedCs
+				cs.PrepNewCommonState(ElevID)
+				cs.MakeLostElevatorsUnavailable(peers)
+				cs.Acks[ElevID] = Confirmed
+				disconnectTimer = time.NewTimer(config.DisconnectTime)
+				disconnected = false
+				idle = false
 
 			case newButtonEvent := <-buttonEventCh:
 				if newButtonEvent.Button != elevio.BT_Cab || !cs.Elevators[ElevID].Current.MotorStop {
 					cs.Acks[ElevID] = Confirmed
 					cs.RegisterOrder(newButtonEvent, ElevID)
+					if newButtonEvent.Button != elevio.BT_Cab {
+						offlineHallCalls[newButtonEvent.Floor][newButtonEvent.Button] = true
+						SaveOfflineHallCalls(ElevID, offlineHallCalls)
+					}
 					ackedCsCh <- cs
 				}
 
 			case completedOrder := <-completedOrderCh:
 				cs.Acks[ElevID] = Confirmed
 				cs.ClearOrder(completedOrder, ElevID)
-				completedWhileOffline = append(completedWhileOffline, completedOrder)
+				if completedOrder.Button != elevio.BT_Cab {
+					offlineHallCalls[completedOrder.Floor][completedOrder.Button] = false
+					SaveOfflineHallCalls(ElevID, offlineHallCalls)
+				}
 				ackedCsCh <- cs
 
 			case newLocalState := <-localStateCh:
