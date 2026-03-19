@@ -102,7 +102,7 @@ func Synchronizer(
 				}
 
 			case newButtonEvent := <-buttonEventCh:
-				if !cs.Elevators[ElevID].Current.MotorStop {
+				if newButtonEvent.Button != elevio.BT_Cab || !cs.Elevators[ElevID].Current.MotorStop {
 					cs.Acks[ElevID] = Confirmed
 					cs.RegisterOrder(newButtonEvent, ElevID)
 					ackedCsCh <- cs
