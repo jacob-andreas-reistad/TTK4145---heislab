@@ -38,6 +38,7 @@ func Synchronizer(
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
 	var tempStorage TempStorageType
+	var completedWhileOffline []elevio.ButtonEvent
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
@@ -90,6 +91,10 @@ func Synchronizer(
 							}
 						}
 					}
+					for _, done := range completedWhileOffline {
+						arrivedCs.HallCalls[done.Floor][done.Button] = false
+					}
+					completedWhileOffline = nil
 					cs = arrivedCs
 					cs.PrepNewCommonState(ElevID)
 					cs.MakeLostElevatorsUnavailable(peers)
@@ -111,6 +116,7 @@ func Synchronizer(
 			case completedOrder := <-completedOrderCh:
 				cs.Acks[ElevID] = Confirmed
 				cs.ClearOrder(completedOrder, ElevID)
+				completedWhileOffline = append(completedWhileOffline, completedOrder)
 				ackedCsCh <- cs
 
 			case newLocalState := <-localStateCh:
@@ -159,6 +165,9 @@ func Synchronizer(
 			}
 		case !idle:
 			select {
+			case completedOrder = <-completedOrderCh:
+				cs.ClearOrder(completedOrder, ElevID)
+				ackedCsCh <- cs
 			case arrivedCs := <-networkRx: //new common state arrived while not idle
 				if arrivedCs.StateNum < cs.StateNum {
 					break
