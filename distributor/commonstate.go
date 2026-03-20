@@ -10,6 +10,12 @@ import (
 	"strconv"
 )
 
+var buttonNames = map[elevio.ButtonType]string{
+	elevio.BT_HallUp:   "HallUp",
+	elevio.BT_HallDown: "HallDown",
+	elevio.BT_Cab:      "Cab",
+}
+
 type AckState int
 
 const (
@@ -27,10 +33,8 @@ type CommonState struct {
 	StateNum int
 	Sender   int
 
-	Acks [config.NumElevators]AckState
-
+	Acks      [config.NumElevators]AckState
 	HallCalls [config.NumFloors][2]bool
-
 	Elevators [config.NumElevators]Elevator
 }
 
@@ -69,7 +73,6 @@ func (cs *CommonState) printOrders() {
 	}
 }
 
-// Bør evt splittes i to, en hallcall og en cabcall
 func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
@@ -77,8 +80,7 @@ func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = true
 	}
-	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
-	fmt.Printf("[NEW ORDER] floor=%d  button=%s\n", btn.Floor, btnName[btn.Button])
+	fmt.Printf("[NEW ORDER] floor=%d  button=%s\n", btn.Floor, buttonNames[btn.Button])
 	cs.printOrders()
 }
 
@@ -89,11 +91,11 @@ func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = false
 	}
-	btnName := map[elevio.ButtonType]string{elevio.BT_HallUp: "HallUp", elevio.BT_HallDown: "HallDown", elevio.BT_Cab: "Cab"}
-	fmt.Printf("[ORDER DONE] floor=%d  button=%s\n", btn.Floor, btnName[btn.Button])
+	fmt.Printf("[ORDER DONE] floor=%d  button=%s\n", btn.Floor, buttonNames[btn.Button])
 	cs.printOrders()
 }
 
+// Copy required because array elements are not directly addressable
 func (cs *CommonState) UpdateElevatorState(id int, state elevator.State) {
 	info := cs.Elevators[id]
 	info.Current = state
