@@ -17,12 +17,12 @@ import (
 func main() {
 
 	// Command line arguments for elevator ID and port number:
-	elevIDFlag	 := flag.Int("id", 0, "<-- Default value, override with command line argument -id=x")
-	portFlag	 := flag.Int("port", 15657, "<-- Default value, override with command line argument -port=xxxx")
+	elevIDFlag := flag.Int("id", 0, "<-- Default value, override with command line argument -id=x")
+	portFlag := flag.Int("port", 15657, "<-- Default value, override with command line argument -port=xxxx")
 	flag.Parse()
 
-	id 		:= *elevIDFlag
-	port 	:= *portFlag
+	id := *elevIDFlag
+	port := *portFlag
 
 	// Initialize elevator hardware:
 	elevio.Init("localhost:"+strconv.Itoa(port), config.NumFloors)
@@ -30,14 +30,14 @@ func main() {
 	fmt.Println("This system has ", config.NumFloors, " floors,", config.NumElevators, " elevators and ", config.NumButtons, " buttons per floor.")
 
 	// Channels for communication between goroutines:
-	newOrderCh 		:= make(chan elevator.Order, config.Buffer)
-	orderDoneCh 	:= make(chan elevio.ButtonEvent, config.Buffer)
-	stateUpdateCh 	:= make(chan elevator.State, config.Buffer)
-	csConfirmedCh 	:= make(chan distributor.CommonState, config.Buffer)
-	networkTx 		:= make(chan distributor.CommonState, config.Buffer)
-	networkRx 		:= make(chan distributor.CommonState, config.Buffer)
-	peersTx 		:= make(chan bool, config.Buffer)
-	peersRx 		:= make(chan peers.PeerUpdate, config.Buffer)
+	newOrderCh := make(chan elevator.Order, config.Buffer)
+	orderDoneCh := make(chan elevio.ButtonEvent, config.Buffer)
+	stateUpdateCh := make(chan elevator.State, config.Buffer)
+	csConfirmedCh := make(chan distributor.CommonState, config.Buffer)
+	networkTx := make(chan distributor.CommonState, config.Buffer)
+	networkRx := make(chan distributor.CommonState, config.Buffer)
+	peersTx := make(chan bool, config.Buffer)
+	peersRx := make(chan peers.PeerUpdate, config.Buffer)
 
 	// Start goroutines:
 	go peers.Receiver(config.PeersPortNumber, peersRx)
@@ -54,3 +54,5 @@ func main() {
 		lights.SetPanelLights(cs, id)
 	}
 }
+
+// thank you USA, you are my best friend
