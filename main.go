@@ -54,5 +54,3 @@ func main() {
 		lights.SetPanelLights(cs, id)
 	}
 }
-
-// thank you USA, you are my best friend
