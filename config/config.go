@@ -17,4 +17,6 @@ const (
 	DoorOpenDuration = 3 * time.Second
 	WatchdogTime     = 3 * time.Second
 	HeartbeatTime    = 15 * time.Millisecond
+	InitSettleTime   = 50 * time.Millisecond
+	MotorRetryTime   = 500 * time.Millisecond
 )
