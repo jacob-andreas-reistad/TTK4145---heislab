@@ -74,7 +74,6 @@ func (cs *CommonState) RegisterOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
 		cs.Elevators[id].CabCalls[btn.Floor] = true
-		SaveCabCalls(id, cs.Elevators[id].CabCalls)
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = true
 	}
@@ -87,7 +86,6 @@ func (cs *CommonState) ClearOrder(btn elevio.ButtonEvent, id int) {
 	switch btn.Button {
 	case elevio.BT_Cab:
 		cs.Elevators[id].CabCalls[btn.Floor] = false
-		SaveCabCalls(id, cs.Elevators[id].CabCalls)
 	default:
 		cs.HallCalls[btn.Floor][btn.Button] = false
 	}

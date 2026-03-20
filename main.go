@@ -45,7 +45,7 @@ func main() {
 	go bcast.Receiver(config.BcastPortNumber, networkRx)
 	go bcast.Transmitter(config.BcastPortNumber, networkTx)
 	go distributor.Synchronizer(id, stateUpdateCh, peersRx, networkTx, networkRx, csConfirmedCh, orderDoneCh)
-	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh, distributor.LoadDirection(id))
+	go elevator.Elevator(newOrderCh, orderDoneCh, stateUpdateCh, elevator.Down)
 
 	// Main loop: handle confirmed common states, assign new orders and update lights
 	for {

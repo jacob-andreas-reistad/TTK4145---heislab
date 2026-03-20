@@ -32,26 +32,18 @@ func Synchronizer(
 	go elevio.PollButtons(buttonEventCh)
 
 	var cs CommonState
-	cs.Elevators[ElevID].CabCalls = LoadCabCalls(ElevID)
 	var peers peers.PeerUpdate
 	var newLocalState elevator.State
 	var completedOrder elevio.ButtonEvent
 	var newButtonEvent elevio.ButtonEvent
 	var tempStorage TempStorageType
-	offlineHallCalls := LoadOfflineHallCalls(ElevID)
+	offlineHallCalls := [config.NumFloors][2]bool{}
 
 	heartbeat := time.NewTicker(config.HeartbeatTime)
 	disconnectTimer := time.NewTimer(config.DisconnectTime)
 
 	idle := true
 	disconnected := false
-
-	// If there are persisted offline hall calls from a previous crash, start in disconnected mode
-	if offlineHallCalls != ([config.NumFloors][2]bool{}) {
-		disconnected = true
-		cs.MakeOtherElevatorsUnavailable(ElevID)
-		fmt.Printf("[network] Elevator %d has pending offline hall calls - starting in disconnected mode\n", ElevID)
-	}
 
 	// Startup: ensure we reach a known floor
 	//elevio.SetMotorDirection(elevio.MD_Down)
@@ -112,7 +104,6 @@ func Synchronizer(
 
 				// Clear offline tracking
 				offlineHallCalls = [config.NumFloors][2]bool{}
-				ClearOfflineHallCalls(ElevID)
 
 				cs = arrivedCs
 				cs.PrepNewCommonState(ElevID)
@@ -128,7 +119,6 @@ func Synchronizer(
 					cs.RegisterOrder(newButtonEvent, ElevID)
 					if newButtonEvent.Button != elevio.BT_Cab {
 						offlineHallCalls[newButtonEvent.Floor][newButtonEvent.Button] = true
-						SaveOfflineHallCalls(ElevID, offlineHallCalls)
 					}
 					ackedCsCh <- cs
 				}
@@ -138,7 +128,6 @@ func Synchronizer(
 				cs.ClearOrder(completedOrder, ElevID)
 				if completedOrder.Button != elevio.BT_Cab {
 					offlineHallCalls[completedOrder.Floor][completedOrder.Button] = false
-					SaveOfflineHallCalls(ElevID, offlineHallCalls)
 				}
 				ackedCsCh <- cs
 
@@ -169,7 +158,6 @@ func Synchronizer(
 				idle = false
 
 			case newLocalState = <-localStateCh: //local state changes
-				SaveDirection(ElevID, newLocalState.Direction)
 				tempStorage = UpdateState
 				cs.PrepNewCommonState(ElevID)
 				cs.UpdateElevatorState(ElevID, newLocalState)
