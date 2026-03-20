@@ -34,7 +34,7 @@ func (bh Behaviour) ToString() string {
 	case Moving:
 		return "moving"
 	case DoorsOpen:
-		return "doorsOpen"
+		return "doorOpen"
 	default:
 		panic("invalid behaviour")
 	}
