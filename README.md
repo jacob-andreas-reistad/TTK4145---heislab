@@ -20,7 +20,7 @@ maintaining a shared common state. The main modules are:
 - `elevio/` — hardware I/O driver; polls buttons, floor sensor, obstruction and stop switches
 - `lights/` — updates hall and cab button lamps on the panel
 - `config/` — system-wide constants (number of floors, elevators, timeouts)
-- `packetloss/` — utility for simulating network packet loss; included to simplify setup during FAT-testing
+
 - 
 
 
