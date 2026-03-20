@@ -21,8 +21,6 @@ maintaining a shared common state. The main modules are:
 - `lights/` — updates hall and cab button lamps on the panel
 - `config/` — system-wide constants (number of floors, elevators, timeouts)
 
-- 
-
 
 ### Module Communication
 All modules communicate via Go channels, coordinated in `main.go`:
