@@ -1,5 +1,3 @@
-// This file contains the order handler for the elevator system
-
 package elevator
 
 import (
@@ -7,11 +5,13 @@ import (
 	"heis/elevio"
 )
 
+// Order represents the state of all orders in the system,
+// where each element is true if there is an active order for that floor and button type
 type Order [config.NumFloors][config.NumButtons]bool
 
-func (o Order) has_orders(direction MotorDirection, floor int) bool {
+// hasOrders checks if there are any orders in the given direction from the given floor
+func (o Order) hasOrders(direction MotorDirection, floor int) bool {
 	switch direction {
-
 	case Up:
 		for flr := floor + 1; flr < config.NumFloors; flr++ {
 			for btn := 0; btn < config.NumButtons; btn++ {
@@ -21,7 +21,6 @@ func (o Order) has_orders(direction MotorDirection, floor int) bool {
 			}
 		}
 		return false
-
 	case Down:
 		for flr := 0; flr < floor; flr++ {
 			for btn := 0; btn < config.NumButtons; btn++ {
@@ -36,12 +35,13 @@ func (o Order) has_orders(direction MotorDirection, floor int) bool {
 	}
 }
 
-func order_complete(o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
-	if o[floor][elevio.BT_Cab] {
+// orderComplete checks if the given order is complete at the given floor and direction,
+// and sends a ButtonEvent to the orderDoneCh if it is
+func orderComplete(_o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
+	if _o[floor][elevio.BT_Cab] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 	}
-	if o[floor][direction.button_type()] {
+	if _o[floor][direction.button_type()] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: direction.button_type()}
 	}
-
 }

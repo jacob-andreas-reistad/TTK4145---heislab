@@ -1,9 +1,8 @@
-// This file contains the motor direction control for the elevator system... tbc
-
 package elevator
 
 import "heis/elevio"
 
+// MotorDirection represents the direction of the elevator motor, which can be Up, Down or Stop
 type MotorDirection int
 
 const (
@@ -12,7 +11,8 @@ const (
 	Down MotorDirection = -1
 )
 
-func (md MotorDirection) motor_direction() elevio.MotorDirection {
+// motorDirection converts the MotorDirection to the corresponding elevio.MotorDirection
+func (md MotorDirection) motorDirection() elevio.MotorDirection {
 	switch md {
 	case Up:
 		return elevio.MD_Up
@@ -23,7 +23,8 @@ func (md MotorDirection) motor_direction() elevio.MotorDirection {
 	}
 }
 
-func (md MotorDirection) button_type() elevio.ButtonType {
+// buttonType returns the corresponding elevio.ButtonType for the given MotorDirection
+func (md MotorDirection) buttonType() elevio.ButtonType {
 	switch md {
 	case Up:
 		return elevio.BT_HallUp
@@ -34,6 +35,7 @@ func (md MotorDirection) button_type() elevio.ButtonType {
 	}
 }
 
+// opposite returns the opposite direction of the given MotorDirection
 func (md MotorDirection) opposite() MotorDirection {
 	switch md {
 	case Up:
@@ -45,6 +47,7 @@ func (md MotorDirection) opposite() MotorDirection {
 	}
 }
 
+// ToString returns the string representation of the given MotorDirection
 func (md MotorDirection) ToString() string {
 	switch md {
 	case Up:
