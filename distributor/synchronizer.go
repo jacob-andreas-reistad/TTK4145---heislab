@@ -40,11 +40,11 @@ func Synchronizer(
 	var tempStorage TempStorageType
 	offlineHallCalls := [config.NumFloors][2]bool{}
 
-	heartbeat := time.NewTicker(config.HeartbeatTime)
-	disconnectTimer := time.NewTimer(config.DisconnectTime)
+	heartbeat		:= time.NewTicker(config.HeartbeatTime)
+	disconnectTimer	:= time.NewTimer(config.DisconnectTime)
 
-	idle := true
-	disconnected := false
+	idle			:= true
+	disconnected	:= false
 
 	// Startup: ensure we reach a known floor
 	for {
