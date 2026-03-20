@@ -85,7 +85,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 			case DoorsOpen:
 				switch {
 
-				// If there are orders in the current direction, continue moving in that direction
+				// If there are orders in the current direction
 				case orders.hasOrders(state.Direction, state.Floor):
 					elevio.SetMotorDirection(state.Direction.motorDirection())
 					state.Behaviour = Moving
@@ -96,7 +96,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					}
 					stateUpdateCh <- state
 
-				// If there are orders in the opposite direction, switch direction and start moving
+				// If there are orders in the opposite direction
 				case orders.hasOrders(state.Direction.opposite(), state.Floor):
 					state.Direction = state.Direction.opposite()
 					elevio.SetMotorDirection(state.Direction.motorDirection())
@@ -108,7 +108,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					}
 					stateUpdateCh <- state
 
-				// If there are no orders, go idle
+				// If there are no orders
 				default:
 					state.Behaviour = Idle
 					stateUpdateCh <- state
@@ -132,7 +132,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 			case Moving:
 				switch {
 
-				// If there are orders for the current floor and direction, stop and open doors
+				// If there are orders for the current floor and direction
 				case orders[state.Floor][state.Direction.buttonType()]:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					openDoorCh <- true
@@ -150,8 +150,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				// If there are orders for the current floor in the opposite direction,
-				// but we just served this floor in the current direction, stop and open doors, but don't mark orders as complete
+				// If there are orders for the current floor in the opposite direction, but we just served this floor in the current direction
 				case orders[state.Floor][elevio.BT_Cab] && !orders[state.Floor][state.Direction.opposite().buttonType()]:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					openDoorCh <- true
@@ -159,13 +158,13 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					state.Behaviour = DoorsOpen
 					stateUpdateCh <- state
 
-				// If there are orders in the opposite direction, but not for the current floor, switch direction and continue moving
+				// If there are orders in the opposite direction, but not for the current floor
 				case orders.hasOrders(state.Direction.opposite(), state.Floor) &&
 					!(state.Floor == 0 && state.Direction == Down) &&
 					!(state.Floor == config.NumFloors-1 && state.Direction == Up):
 					motorTimer = time.NewTimer(config.WatchdogTime)
 
-				// If there are no orders in either direction, stop and go idle
+				// If there are no orders in either direction
 				default:
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					state.Behaviour = Idle
@@ -218,24 +217,36 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					motorTimer = time.NewTimer(config.WatchdogTime)
 					select {
 					case motorCh <- false:
+
+					// If the motor channel is full, it means we are already handling a motor failure, so we don't need to send another signal
 					default:
 					}
 
+				// If no orders, stay idle
 				default:
 				}
 
+			// If we have new orders while the doors are open, check if we need to stay and serve more orders at this floor,
+			// or if we can close the doors and start moving
 			case DoorsOpen:
 				switch {
+
+				// If there are orders for the current floor and direction, or if there are cab orders for the current floor
 				case orders[state.Floor][elevio.BT_Cab] || orders[state.Floor][state.Direction.buttonType()]:
 					openDoorCh <- true
 					orderComplete(orders, state.Direction, state.Floor, orderDoneCh)
 				}
 
+			// If we get new orders while moving, we don't need to do anything,
+			// as the logic for handling new orders will be triggered when we reach the next floor
 			case Moving:
 
+			// If we receive new orders while in an unknown state
 			default:
 				panic("Orders in wrong state")
 			}
+
+		// Handle motor failure:
 		case <-motorTimer.C:
 			if !state.MotorStop {
 				fmt.Println("motor power lost")
@@ -244,12 +255,14 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 				motorRetryTimer = time.NewTimer(500 * time.Millisecond)
 			}
 
+		// Handle motor power restoration:
 		case <-motorRetryTimer.C:
 			if state.MotorStop {
 				elevio.SetMotorDirection(state.Direction.motorDirection())
 				motorRetryTimer = time.NewTimer(500 * time.Millisecond)
 			}
 
+		// If we receive a signal on the motor channel, it means we have either just detected a motor failure or just restored power
 		case motor := <-motorCh:
 			if state.MotorStop {
 				fmt.Println("motor power restored")
@@ -258,6 +271,7 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 				stateUpdateCh <- state
 			}
 
+		// Handle door obstruction signals:
 		case obstructed := <-doorObstructedCh:
 			if obstructed != state.Obstructed {
 				state.Obstructed = obstructed
@@ -269,6 +283,8 @@ func Elevator(newOrderCh <-chan Order, orderDoneCh chan<- elevio.ButtonEvent, st
 					stateUpdateCh <- state
 				}
 			}
+
+		// Handle door obstruction timeout:
 		case <-obstructionTimer.C:
 			if !state.MotorStop {
 				fmt.Println("obstruction timeout - marking unavailable")

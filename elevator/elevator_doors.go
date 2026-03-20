@@ -1,5 +1,3 @@
-// This file contains the logic for the elevator doors in the elevator system... tbc
-
 package elevator
 
 import (
@@ -16,40 +14,43 @@ const (
 	Open
 )
 
+// doors handles the logic for opening and closing the elevator doors, as well as dealing with obstructions.
 func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh chan<- bool) {
 	elevio.SetDoorOpenLamp(false)
 
 	obstructionCh := make(chan bool)
 	go elevio.PollObstructionSwitch(obstructionCh)
 
-	door_state := Closed
+	doorState := Closed
 	obstruction := false
-	time_counter := time.NewTimer(time.Hour)
-	time_counter.Stop()
+	doorTimer := time.NewTimer(time.Hour)
+	doorTimer.Stop()
 
 	for {
 		select {
 
+		// Handle door open requests:
 		case <-doorOpenCh:
 
-			switch door_state {
+			switch doorState {
 			case Open:
-				time_counter = time.NewTimer(config.DoorOpenDuration)
+				doorTimer = time.NewTimer(config.DoorOpenDuration)
 			case Closed:
 				elevio.SetDoorOpenLamp(true)
-				time_counter = time.NewTimer(config.DoorOpenDuration)
-				door_state = Open
+				doorTimer = time.NewTimer(config.DoorOpenDuration)
+				doorState = Open
 			case Obstructed:
-				time_counter = time.NewTimer(config.DoorOpenDuration)
-				door_state = Open
+				doorTimer = time.NewTimer(config.DoorOpenDuration)
+				doorState = Open
 			default:
 				panic("Invalid door state")
 			}
 
+		// Handle door obstruction status updates:
 		case obstruction = <-obstructionCh:
-			if door_state == Obstructed && !obstruction {
-				time_counter = time.NewTimer(config.DoorOpenDuration)
-				door_state = Open
+			if doorState == Obstructed && !obstruction {
+				doorTimer = time.NewTimer(config.DoorOpenDuration)
+				doorState = Open
 			}
 			if obstruction {
 				doorObstructedCh <- true
@@ -57,13 +58,14 @@ func doors(doorClosedCh chan<- bool, doorOpenCh <-chan bool, doorObstructedCh ch
 				doorObstructedCh <- false
 			}
 
-		case <-time_counter.C:
+		// Handle door close timer:
+		case <-doorTimer.C:
 			if obstruction {
-				door_state = Obstructed
+				doorState = Obstructed
 			} else {
 				elevio.SetDoorOpenLamp(false)
 				doorClosedCh <- true
-				door_state = Closed
+				doorState = Closed
 			}
 		}
 	}
