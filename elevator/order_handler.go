@@ -37,11 +37,11 @@ func (o Order) hasOrders(direction MotorDirection, floor int) bool {
 
 // orderComplete checks if the given order is complete at the given floor and direction,
 // and sends a ButtonEvent to the orderDoneCh if it is
-func orderComplete(_o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
-	if _o[floor][elevio.BT_Cab] {
+func orderComplete(o Order, direction MotorDirection, floor int, orderDoneCh chan<- elevio.ButtonEvent) {
+	if o[floor][elevio.BT_Cab] {
 		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: elevio.BT_Cab}
 	}
-	if _o[floor][direction.button_type()] {
-		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: direction.button_type()}
+	if o[floor][direction.buttonType()] {
+		orderDoneCh <- elevio.ButtonEvent{Floor: floor, Button: direction.buttonType()}
 	}
 }
