@@ -206,6 +206,7 @@ func Synchronizer(
 				// If the arrived state is the same but we haven't acknowledged it yet
 				case arrivedCs.AllAcknowledged(elevID):
 					cs = arrivedCs
+					cs.MakeLostElevatorsUnavailable(peerUpdate)
 					cs.printOrders()
 					ackedCsCh <- cs
 
